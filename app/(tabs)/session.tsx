@@ -2,6 +2,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { supabase } from "@/lib/supabase";
 import { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
@@ -84,6 +85,7 @@ export default function SessionScreen() {
   const [endMood, setEndMood] = useState("");
   const [distractionLevel, setDistractionLevel] = useState("Low");
   const [userNotes, setUserNotes] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const timerRef = useRef<any>(null);
 
@@ -171,6 +173,7 @@ export default function SessionScreen() {
 
   const handleSaveSession = async () => {
     console.log("Attempting to save session...");
+    setLoading(true);
     try {
       const {
         data: { user },
@@ -178,6 +181,7 @@ export default function SessionScreen() {
       if (!user) {
         console.error("No user logged in");
         Alert.alert("Error", "You must be logged in.");
+        setLoading(false);
         return;
       }
 
@@ -277,6 +281,8 @@ export default function SessionScreen() {
     } catch (error: any) {
       console.error("Catch block error:", error);
       Alert.alert("Error", error.message || "Failed to save session");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -516,13 +522,31 @@ export default function SessionScreen() {
 
             <View className="mb-4">
               <Text className="text-slate-400 mb-2">End Mood</Text>
-              <TextInput
-                className="bg-slate-900 text-white p-4 rounded-xl text-lg border border-slate-800"
-                placeholder="e.g. Drained, Satisfied"
-                placeholderTextColor="#64748b"
-                value={endMood}
-                onChangeText={setEndMood}
-              />
+              <View className="flex-row flex-wrap gap-2">
+                {[
+                  { label: "On Fire", emoji: "🔥" },
+                  { label: "Focused", emoji: "🧠" },
+                  { label: "Anxious", emoji: "😰" },
+                  { label: "Bored", emoji: "😑" },
+                  { label: "Foggy", emoji: "☁️" },
+                  { label: "Resistance", emoji: "🛑" },
+                  { label: "Drained", emoji: "🔋" },
+                  { label: "Neutral", emoji: "😐" },
+                ].map((item) => (
+                  <Pressable
+                    key={item.label}
+                    onPress={() => setEndMood(item.label)}
+                    className={`w-[48%] p-3 rounded-xl border flex-row items-center justify-center gap-2 ${
+                      endMood === item.label
+                        ? "bg-blue-600 border-blue-600"
+                        : "bg-slate-900 border-slate-800"
+                    }`}
+                  >
+                    <Text className="text-2xl">{item.emoji}</Text>
+                    <Text className="text-white font-bold">{item.label}</Text>
+                  </Pressable>
+                ))}
+              </View>
             </View>
 
             <View className="mb-4">
@@ -559,9 +583,18 @@ export default function SessionScreen() {
 
             <Pressable
               onPress={handleSaveSession}
-              className="bg-blue-600 p-4 rounded-xl items-center active:bg-blue-700"
+              disabled={loading}
+              className={`p-4 rounded-xl items-center ${
+                loading ? "bg-blue-800" : "bg-blue-600 active:bg-blue-700"
+              }`}
             >
-              <Text className="text-white font-bold text-lg">Save Session</Text>
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text className="text-white font-bold text-lg">
+                  Save Session
+                </Text>
+              )}
             </Pressable>
           </View>
         )}

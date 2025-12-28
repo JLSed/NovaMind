@@ -31,6 +31,9 @@ const MAPPING = {
   "brain.head.profile": "psychology",
   "face.smiling": "sentiment-satisfied",
   gear: "settings",
+  pencil: "edit",
+  xmark: "close",
+  "trash.fill": "delete",
 } as IconMapping;
 
 /**

@@ -1,0 +1,69 @@
+# NovaMind Copilot Instructions
+
+## 🧠 Project Philosophy & Core Logic
+
+- **Concept**: Chronobiology & Energy Management.
+- **Core Principle**: **Output > Mood**. The app compares subjective feeling (Pre-Work) vs. actual performance (Post-Work) to find patterns.
+- **Goal**: Identify "Peak Performance Windows" and "Crash Zones" based on biological data (Sleep) and context (Tags).
+
+## 🏗 Project Architecture
+
+- **Framework**: Expo (React Native) with Expo Router (File-based routing).
+- **Language**: TypeScript (Strict mode).
+- **Styling**: NativeWind (Tailwind CSS) - use `className` props.
+- **Backend**: Supabase (Auth & Database).
+- **AI Engine**: Google Gemini 1.5 Flash (via `@google/generative-ai`).
+
+## 📂 Key Directories & Files
+
+- `app/`: Routes and screens.
+  - `_layout.tsx`: Root layout, handles Auth state (`supabase.auth.onAuthStateChange`) and protection.
+  - `(tabs)/`: Main tab navigation (Home, Session, History).
+- `lib/`: Service integrations.
+  - `supabase.ts`: Supabase client setup.
+  - `gemini.ts`: AI logic, `SYSTEM_PROMPT`, and context injection.
+- `components/`: Reusable UI components.
+  - `ui/icon-symbol.tsx`: Cross-platform icon wrapper.
+- `hooks/`: Custom hooks (e.g., `useColorScheme`).
+
+## 🔄 Data Flow & Schema
+
+- **Database**: Single table `productivity_logs`.
+  - `id`: UUID
+  - `user_id`: UUID (Auth)
+  - `entry_date`: Date
+  - `log_data`: **JSONB** (Stores all metrics).
+- **JSON Structure (`log_data`)**:
+  - `daily_bio_metrics`: `sleep_duration_hours`, `waking_condition`, `sleep_waketime`.
+  - `sessions`: Array of work blocks.
+    - `pre_session`: `subjective_mood`, `context_tags` (e.g., ["caffeine", "quiet"]), `start_time`.
+    - `post_session`: `output_rating` (High/Med/Low), `net_focus_minutes` (Total - Breaks), `distraction_level`.
+
+## 🎨 Styling Conventions
+
+- Use **NativeWind** (`className`) for all styling.
+- **Colors**: Use Slate (`bg-slate-900`, `text-slate-300`) for dark mode base.
+- **Layout**: Flexbox is default. Use `flex-1`, `justify-center`, `items-center`.
+- **Safe Area**: Use `SafeAreaView` from `react-native-safe-area-context` for screen containers.
+
+## 🛠 Developer Workflow
+
+- **Start**: `npx expo start` (Select Android/iOS/Web).
+- **Reset**: `npm run reset-project` (Resets to blank state).
+- **Env Vars**: Use `EXPO_PUBLIC_` prefix for client-side variables (e.g., `EXPO_PUBLIC_SUPABASE_URL`).
+
+## 🤖 AI Integration Patterns
+
+- **Strategy**: **Context Injection**. We do NOT fine-tune. We send `HISTORY_LOGS` (last 30 days) + `CURRENT_STATE` in every prompt.
+- **Prompt Engineering**: Defined in `lib/gemini.ts`.
+- **Output**: AI returns Markdown formatted text with sections: `📊 Daily Prediction`, `🕒 Recommended Flow`, `💡 Insight`.
+
+## 🚨 Common Pitfalls
+
+- **Auth Redirects**: Ensure `app/_layout.tsx` logic covers all protected routes.
+- **JSON Data**: `log_data` is unstructured in DB; strictly validate types in TypeScript (see `LogEntry` type in `history.tsx`).
+- **Icons**: Use `IconSymbol` instead of direct library imports for cross-platform consistency.
+
+## 🚨 Instruction
+
+-- stop changing the AI model being used in the project. it should always be "gemini-flash-latest"
