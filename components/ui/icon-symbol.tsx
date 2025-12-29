@@ -34,6 +34,7 @@ const MAPPING = {
   pencil: "edit",
   xmark: "close",
   "trash.fill": "delete",
+  "cup.and.saucer.fill": "local-cafe",
 } as IconMapping;
 
 /**

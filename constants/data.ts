@@ -37,10 +37,34 @@ export const PHYSICAL_STATE_OPTIONS = [
   { label: "Groggy", emoji: "😵‍💫" },
 ];
 
+export const BREAK_TRIGGERS = [
+  "Fatigue",
+  "Boredom",
+  "Scheduled",
+  "Stuck/Blocked",
+  "Hunger",
+];
+
+export const BREAK_INTENTS = ["Recovery", "Procrastination"];
+
+export const BREAK_ACTIVITIES = [
+  "Doomscrolling",
+  "Social Media",
+  "Nap",
+  "Walk",
+  "Gaming",
+  "TV/Series",
+  "Reading",
+  "Eating",
+  "Chore",
+  "Nothing",
+];
+
 export const TAG_CATEGORIES = [
   {
     title: "Fuel (Intake & Biology)",
     tags: [
+      "Just Woked Up",
       "Caffeinated",
       "Fasted",
       "Heavy Meal",
@@ -77,7 +101,7 @@ export const TAG_CATEGORIES = [
   },
   {
     title: "Pressure (Psychological State)",
-    tags: ["Deadline", "Backlog", "Passion Project", "Forced", "Blocked"],
+    tags: ["Deadline", "Backlog", "Passion", "Forced", "Blocked"],
   },
   {
     title: "Social",

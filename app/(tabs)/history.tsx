@@ -45,6 +45,13 @@ type LogEntry = {
         break_duration_minutes: number;
       };
     }[];
+    break_sessions?: {
+      session_id: string;
+      type: string;
+      post_session?: {
+        total_duration_minutes: number;
+      };
+    }[];
   };
 };
 
@@ -241,6 +248,23 @@ function LogCard({ log }: { log: LogEntry }) {
       0
     ) || 0;
 
+  // Calculate total break time
+  const totalBreakFromWork =
+    log.log_data.sessions?.reduce(
+      (acc, session) =>
+        acc + (session.post_session?.break_duration_minutes || 0),
+      0
+    ) || 0;
+
+  const totalBreakSessions =
+    log.log_data.break_sessions?.reduce(
+      (acc, session) =>
+        acc + (session.post_session?.total_duration_minutes || 0),
+      0
+    ) || 0;
+
+  const totalBreak = totalBreakFromWork + totalBreakSessions;
+
   // Normalize physical state to array
   const physicalStates = Array.isArray(bio.physical_state)
     ? bio.physical_state
@@ -261,9 +285,16 @@ function LogCard({ log }: { log: LogEntry }) {
       <View className="flex-row justify-between items-center mb-3">
         <Text className="text-white font-bold text-lg">Day {day}</Text>
         <View className="flex-row items-center gap-2">
-          <Text className="text-blue-400 font-bold">
-            {totalFocus} min focus
-          </Text>
+          <View className="items-end">
+            <Text className="text-blue-400 font-bold">
+              {totalFocus} min focus
+            </Text>
+            {totalBreak > 0 && (
+              <Text className="text-teal-400 font-bold text-xs">
+                {totalBreak} min break
+              </Text>
+            )}
+          </View>
           <IconSymbol name="chevron.right" size={20} color="#94a3b8" />
         </View>
       </View>

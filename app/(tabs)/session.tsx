@@ -1,5 +1,11 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { MOOD_OPTIONS, TAG_CATEGORIES } from "@/constants/data";
+import {
+  BREAK_ACTIVITIES,
+  BREAK_INTENTS,
+  BREAK_TRIGGERS,
+  MOOD_OPTIONS,
+  TAG_CATEGORIES,
+} from "@/constants/data";
 import { supabase } from "@/lib/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -17,18 +23,26 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 // Types based on the JSON structure
 type SessionPhase = "idle" | "pre-session" | "active" | "post-session";
+type SessionType = "work" | "break";
 
 const CURRENT_SESSION_KEY = "nova_current_session";
 
 export default function SessionScreen() {
   const [phase, setPhase] = useState<SessionPhase>("idle");
+  const [sessionType, setSessionType] = useState<SessionType>("work");
 
-  // Pre-Session State
+  // Pre-Session State (Work)
   const [jobCategory, setJobCategory] = useState("");
   const [subjectiveMood, setSubjectiveMood] = useState("");
   const [energyLevel, setEnergyLevel] = useState("5");
   const [contextTags, setContextTags] = useState<string[]>([]);
   const [customTag, setCustomTag] = useState("");
+
+  // Pre-Session State (Break)
+  const [breakTrigger, setBreakTrigger] = useState("");
+  const [breakIntent, setBreakIntent] = useState("");
+  const [plannedDuration, setPlannedDuration] = useState("15");
+  const [breakContextTags, setBreakContextTags] = useState<string[]>([]);
 
   // Active Session State
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -39,16 +53,51 @@ export default function SessionScreen() {
   const [breaks, setBreaks] = useState<any[]>([]);
   const [showBreakModal, setShowBreakModal] = useState(false);
   const [breakReason, setBreakReason] = useState("");
+  const [breakActivities, setBreakActivities] = useState<string[]>([]); // For active break session
 
   // Post-Session State
   const [outputRating, setOutputRating] = useState("Medium");
   const [endMood, setEndMood] = useState("");
   const [distractionLevel, setDistractionLevel] = useState("Low");
   const [userNotes, setUserNotes] = useState("");
+  const [guiltRating, setGuiltRating] = useState("None");
+  const [recoveryRating, setRecoveryRating] = useState("Medium");
+  const [readinessToReturn, setReadinessToReturn] = useState("5");
+
   const [loading, setLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
   const timerRef = useRef<any>(null);
+
+  const resetState = useCallback(() => {
+    setPhase("idle");
+    setSessionType("work");
+    setJobCategory("");
+    setSubjectiveMood("");
+    setEnergyLevel("5");
+    setContextTags([]);
+    setCustomTag("");
+    setBreakTrigger("");
+    setBreakIntent("");
+    setPlannedDuration("15");
+    setBreakContextTags([]);
+    setStartTime(null);
+    setIsOnBreak(false);
+    setBreakStartTime(null);
+    setAccumulatedBreakTime(0);
+    setElapsedTime(0);
+    setBreaks([]);
+    setShowBreakModal(false);
+    setBreakReason("");
+    setBreakActivities([]);
+    setOutputRating("Medium");
+    setEndMood("");
+    setDistractionLevel("Low");
+    setUserNotes("");
+    setGuiltRating("None");
+    setRecoveryRating("Medium");
+    setReadinessToReturn("5");
+  }, []);
 
   // Load session on mount
   useEffect(() => {
@@ -60,10 +109,16 @@ export default function SessionScreen() {
     try {
       const sessionData = {
         phase,
+        sessionType,
         jobCategory,
         subjectiveMood,
         energyLevel,
         contextTags,
+        breakTrigger,
+        breakIntent,
+        plannedDuration,
+        breakContextTags,
+        breakActivities,
         startTime,
         isOnBreak,
         breakStartTime,
@@ -72,6 +127,9 @@ export default function SessionScreen() {
         endMood,
         distractionLevel,
         userNotes,
+        guiltRating,
+        recoveryRating,
+        readinessToReturn,
         breaks,
         breakReason,
         savedAt: Date.now(),
@@ -85,10 +143,16 @@ export default function SessionScreen() {
     }
   }, [
     phase,
+    sessionType,
     jobCategory,
     subjectiveMood,
     energyLevel,
     contextTags,
+    breakTrigger,
+    breakIntent,
+    plannedDuration,
+    breakContextTags,
+    breakActivities,
     startTime,
     isOnBreak,
     breakStartTime,
@@ -97,6 +161,9 @@ export default function SessionScreen() {
     endMood,
     distractionLevel,
     userNotes,
+    guiltRating,
+    recoveryRating,
+    readinessToReturn,
     breaks,
     breakReason,
   ]);
@@ -114,10 +181,16 @@ export default function SessionScreen() {
         const data = JSON.parse(jsonValue);
         // Restore state
         setPhase(data.phase);
+        setSessionType(data.sessionType || "work");
         setJobCategory(data.jobCategory);
         setSubjectiveMood(data.subjectiveMood);
         setEnergyLevel(data.energyLevel);
         setContextTags(data.contextTags);
+        setBreakTrigger(data.breakTrigger || "");
+        setBreakIntent(data.breakIntent || "");
+        setPlannedDuration(data.plannedDuration || "15");
+        setBreakContextTags(data.breakContextTags || []);
+        setBreakActivities(data.breakActivities || []);
         setStartTime(data.startTime);
         setIsOnBreak(data.isOnBreak);
         setBreakStartTime(data.breakStartTime);
@@ -126,6 +199,9 @@ export default function SessionScreen() {
         setEndMood(data.endMood);
         setDistractionLevel(data.distractionLevel);
         setUserNotes(data.userNotes);
+        setGuiltRating(data.guiltRating || "None");
+        setRecoveryRating(data.recoveryRating || "Medium");
+        setReadinessToReturn(data.readinessToReturn || "5");
         setBreaks(data.breaks || []);
         setBreakReason(data.breakReason || "");
 
@@ -151,12 +227,8 @@ export default function SessionScreen() {
   };
 
   const handleCancelSession = () => {
-    setPhase("idle");
     clearCurrentSession();
-    // Reset other state if needed, though setPhase('idle') usually hides them
-    setJobCategory("");
-    setSubjectiveMood("");
-    setContextTags([]);
+    resetState();
   };
 
   const handleDiscardSession = () => {
@@ -170,13 +242,6 @@ export default function SessionScreen() {
           style: "destructive",
           onPress: () => {
             handleCancelSession();
-            // Also reset post-session specific state
-            setStartTime(null);
-            setAccumulatedBreakTime(0);
-            setElapsedTime(0);
-            setIsOnBreak(false);
-            setUserNotes("");
-            setEndMood("");
           },
         },
       ]
@@ -216,11 +281,38 @@ export default function SessionScreen() {
     }
   };
 
-  const handleStartSession = () => {
-    if (!jobCategory || !subjectiveMood) {
-      Alert.alert("Missing Info", "Please fill in the category and your mood.");
-      return;
+  const toggleBreakTag = (tag: string) => {
+    if (breakContextTags.includes(tag)) {
+      setBreakContextTags(breakContextTags.filter((t) => t !== tag));
+    } else {
+      setBreakContextTags([...breakContextTags, tag]);
     }
+  };
+
+  const toggleBreakActivity = (activity: string) => {
+    if (breakActivities.includes(activity)) {
+      setBreakActivities(breakActivities.filter((a) => a !== activity));
+    } else {
+      setBreakActivities([...breakActivities, activity]);
+    }
+  };
+
+  const handleStartSession = () => {
+    if (sessionType === "work") {
+      if (!jobCategory || !subjectiveMood) {
+        Alert.alert(
+          "Missing Info",
+          "Please fill in the category and your mood."
+        );
+        return;
+      }
+    } else {
+      if (!breakTrigger || !breakIntent) {
+        Alert.alert("Missing Info", "Please fill in the trigger and intent.");
+        return;
+      }
+    }
+
     const now = Date.now();
     console.log("Starting session at:", now);
     setStartTime(now);
@@ -352,46 +444,6 @@ export default function SessionScreen() {
       const endTime = Date.now();
       const totalDurationMs = startTime ? endTime - startTime : 0;
       const totalDurationMinutes = Math.round(totalDurationMs / 60000);
-
-      // Calculate break duration from the breaks array
-      const breakDurationMinutes = calculateTotalBreakMinutes(breaks);
-
-      const netFocusMinutes = totalDurationMinutes - breakDurationMinutes;
-
-      console.log("Session Calculations:", {
-        startTime,
-        endTime,
-        totalDurationMs,
-        accumulatedBreakTime,
-        totalDurationMinutes,
-        breakDurationMinutes,
-        netFocusMinutes,
-      });
-
-      const newSession = {
-        session_id: `sess_${Date.now()}`,
-        job_category: jobCategory,
-        pre_session: {
-          start_time: startTime ? new Date(startTime).toLocaleTimeString() : "",
-          subjective_mood: subjectiveMood,
-          context_tags: contextTags,
-          energy_level: parseInt(energyLevel),
-        },
-        breaks: breaks,
-        post_session: {
-          end_time: new Date(endTime).toLocaleTimeString(),
-          total_duration_minutes: totalDurationMinutes,
-          break_duration_minutes: breakDurationMinutes,
-          net_focus_minutes: netFocusMinutes,
-          output_rating: outputRating,
-          end_mood: endMood,
-          distraction_level: distractionLevel,
-          user_notes: userNotes,
-        },
-      };
-
-      console.log("New Session Object:", JSON.stringify(newSession, null, 2));
-
       const today = getLocalYYYYMMDD();
 
       // Fetch existing log
@@ -407,13 +459,72 @@ export default function SessionScreen() {
         console.error("Error fetching existing log:", fetchError);
       }
 
-      let logData = existingLog?.log_data || { sessions: [] };
+      let logData = existingLog?.log_data || {
+        sessions: [],
+        break_sessions: [],
+      };
 
-      // Ensure sessions array exists
+      // Ensure arrays exist
       if (!logData.sessions) logData.sessions = [];
+      if (!logData.break_sessions) logData.break_sessions = [];
 
-      // Append new session
-      logData.sessions.push(newSession);
+      if (sessionType === "work") {
+        // Calculate break duration from the breaks array
+        const breakDurationMinutes = calculateTotalBreakMinutes(breaks);
+        const netFocusMinutes = totalDurationMinutes - breakDurationMinutes;
+
+        const newSession = {
+          session_id: `sess_${Date.now()}`,
+          type: "work",
+          job_category: jobCategory,
+          pre_session: {
+            start_time: startTime
+              ? new Date(startTime).toLocaleTimeString()
+              : "",
+            subjective_mood: subjectiveMood,
+            context_tags: contextTags,
+            energy_level: parseInt(energyLevel),
+          },
+          breaks: breaks,
+          post_session: {
+            end_time: new Date(endTime).toLocaleTimeString(),
+            total_duration_minutes: totalDurationMinutes,
+            break_duration_minutes: breakDurationMinutes,
+            net_focus_minutes: netFocusMinutes,
+            output_rating: outputRating,
+            end_mood: endMood,
+            distraction_level: distractionLevel,
+            user_notes: userNotes,
+          },
+        };
+        logData.sessions.push(newSession);
+      } else {
+        // Break Session
+        const newBreakSession = {
+          session_id: `break_${Date.now()}`,
+          type: "break",
+          trigger: breakTrigger,
+          intent: breakIntent,
+          activities: breakActivities, // Main activities during the break session
+          pre_session: {
+            start_time: startTime
+              ? new Date(startTime).toLocaleTimeString()
+              : "",
+            subjective_mood: subjectiveMood,
+            energy_level: parseInt(energyLevel),
+            planned_duration: parseInt(plannedDuration),
+            context_tags: breakContextTags,
+          },
+          post_session: {
+            end_time: new Date(endTime).toLocaleTimeString(),
+            total_duration_minutes: totalDurationMinutes,
+            guilt_rating: guiltRating,
+            recovery_rating: recoveryRating,
+            user_notes: userNotes,
+          },
+        };
+        logData.break_sessions.push(newBreakSession);
+      }
 
       // Upsert
       const { error: saveError } = await supabase
@@ -439,16 +550,7 @@ export default function SessionScreen() {
       await clearCurrentSession();
 
       // Reset State
-      setPhase("idle");
-      setJobCategory("");
-      setSubjectiveMood("");
-      setContextTags([]);
-      setStartTime(null);
-      setAccumulatedBreakTime(0);
-      setElapsedTime(0);
-      setIsOnBreak(false);
-      setUserNotes("");
-      setEndMood("");
+      resetState();
     } catch (error: any) {
       console.error("Catch block error:", error);
       Alert.alert("Error", error.message || "Failed to save session");
@@ -465,17 +567,40 @@ export default function SessionScreen() {
         </Text>
 
         {phase === "idle" && (
-          <View className="items-center justify-center mt-20">
+          <View className="items-center justify-center mt-10">
             <Pressable
-              onPress={() => setPhase("pre-session")}
-              className="bg-blue-600 w-48 h-48 rounded-full items-center justify-center active:bg-blue-700 shadow-lg shadow-blue-900"
+              onPress={() => {
+                setSessionType("work");
+                setPhase("pre-session");
+              }}
+              className="bg-blue-600 w-full p-6 rounded-2xl items-center justify-center active:bg-blue-700 shadow-lg shadow-blue-900 mb-6"
             >
-              <IconSymbol name="play.fill" size={60} color="white" />
+              <IconSymbol name="play.fill" size={40} color="white" />
               <Text className="text-white text-xl font-bold mt-2">
-                Start Session
+                Start Work Session
+              </Text>
+              <Text className="text-blue-200 text-sm mt-1">
+                Focus on a task
               </Text>
             </Pressable>
-            <Text className="text-slate-400 mt-6 text-center px-10">
+
+            <Pressable
+              onPress={() => {
+                setSessionType("break");
+                setPhase("pre-session");
+              }}
+              className="bg-teal-600 w-full p-6 rounded-2xl items-center justify-center active:bg-teal-700 shadow-lg shadow-teal-900"
+            >
+              <IconSymbol name="cup.and.saucer.fill" size={40} color="white" />
+              <Text className="text-white text-xl font-bold mt-2">
+                Start Break Session
+              </Text>
+              <Text className="text-teal-200 text-sm mt-1">
+                Relax or recover
+              </Text>
+            </Pressable>
+
+            <Text className="text-slate-400 mt-10 text-center px-10">
               Ready to focus? Or maybe just relax? Track your activity to
               understand your patterns.
             </Text>
@@ -485,106 +610,246 @@ export default function SessionScreen() {
         {phase === "pre-session" && (
           <View>
             <Text className="text-xl text-white font-semibold mb-4">
-              Pre-Session Check-in
+              {sessionType === "work"
+                ? "Pre-Work Check-in"
+                : "Pre-Break Check-in"}
             </Text>
 
-            <View className="mb-4">
-              <Text className="text-slate-400 mb-2">What are you doing?</Text>
-              <TextInput
-                className="bg-slate-900 text-white p-4 rounded-xl text-lg border border-slate-800"
-                placeholder="e.g. Coding, Reading, Gaming"
-                placeholderTextColor="#64748b"
-                value={jobCategory}
-                onChangeText={setJobCategory}
-              />
-            </View>
-
-            <View className="mb-4">
-              <Text className="text-slate-400 mb-2">Current Mood</Text>
-              <View className="flex-row flex-wrap gap-2">
-                {MOOD_OPTIONS.map((item) => (
-                  <Pressable
-                    key={item.label}
-                    onPress={() => setSubjectiveMood(item.label)}
-                    className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
-                      subjectiveMood === item.label
-                        ? "bg-blue-600 border-blue-600"
-                        : "bg-slate-900 border-slate-800"
-                    }`}
-                  >
-                    <View className="flex-row items-center gap-2">
-                      <Text className="text-2xl">{item.emoji}</Text>
-                      <Text className="text-white font-bold">{item.label}</Text>
-                    </View>
-                    <Text className="text-slate-400 text-xs text-center">
-                      {item.desc}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-
-            <View className="mb-4">
-              <Text className="text-slate-400 mb-2">Energy Level (1-10)</Text>
-              <View className="flex-row justify-between bg-slate-900 p-2 rounded-xl border border-slate-800">
-                {[1, 3, 5, 7, 9].map((level) => (
-                  <Pressable
-                    key={level}
-                    onPress={() => setEnergyLevel(level.toString())}
-                    className={`p-3 rounded-lg ${
-                      energyLevel === level.toString()
-                        ? "bg-blue-600"
-                        : "bg-transparent"
-                    }`}
-                  >
-                    <Text className="text-white font-bold">{level}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-
-            <View className="mb-6">
-              <Text className="text-slate-400 mb-4 text-lg font-semibold">
-                Context Tags
-              </Text>
-              {TAG_CATEGORIES.map((category) => (
-                <View key={category.title} className="mb-4">
-                  <Text className="text-slate-500 text-xs font-bold mb-2 uppercase tracking-wider">
-                    {category.title}
+            {sessionType === "work" ? (
+              <>
+                <View className="mb-4">
+                  <Text className="text-slate-400 mb-2">
+                    What are you doing?
                   </Text>
+                  <TextInput
+                    className="bg-slate-900 text-white p-4 rounded-xl text-lg border border-slate-800"
+                    placeholder="e.g. Coding, Reading, Gaming"
+                    placeholderTextColor="#64748b"
+                    value={jobCategory}
+                    onChangeText={setJobCategory}
+                  />
+                </View>
+              </>
+            ) : !breakIntent ? (
+              <View className="gap-4">
+                <Text className="text-slate-400 text-center mb-2">
+                  What do you need right now?
+                </Text>
+                <Pressable
+                  onPress={() => setBreakIntent("Recovery")}
+                  className="bg-green-600/20 border border-green-600 p-8 rounded-2xl items-center active:bg-green-600/30"
+                >
+                  <Text className="text-4xl mb-2">🟢</Text>
+                  <Text className="text-green-400 text-2xl font-bold">
+                    Recharge
+                  </Text>
+                  <Text className="text-green-200/70 text-center mt-2">
+                    I am tired and need energy
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => setBreakIntent("Procrastination")}
+                  className="bg-red-600/20 border border-red-600 p-8 rounded-2xl items-center active:bg-red-600/30"
+                >
+                  <Text className="text-4xl mb-2">🔴</Text>
+                  <Text className="text-red-400 text-2xl font-bold">
+                    Escape
+                  </Text>
+                  <Text className="text-red-200/70 text-center mt-2">
+                    I am bored/stuck and want to run away
+                  </Text>
+                </Pressable>
+              </View>
+            ) : (
+              <>
+                <View className="mb-4">
+                  <Text className="text-slate-400 mb-2">
+                    Trigger (Why now?)
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <View className="flex-row gap-2">
+                      {BREAK_TRIGGERS.map((trigger) => (
+                        <Pressable
+                          key={trigger}
+                          onPress={() => setBreakTrigger(trigger)}
+                          className={`px-4 py-3 rounded-xl border ${
+                            breakTrigger === trigger
+                              ? "bg-teal-600 border-teal-600"
+                              : "bg-slate-900 border-slate-800"
+                          }`}
+                        >
+                          <Text
+                            className={`font-bold ${
+                              breakTrigger === trigger
+                                ? "text-white"
+                                : "text-slate-400"
+                            }`}
+                          >
+                            {trigger}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </ScrollView>
+                </View>
+
+                <View className="mb-4">
+                  <Text className="text-slate-400 mb-2">Intent (Goal)</Text>
                   <View className="flex-row flex-wrap gap-2">
-                    {category.tags.map((tag) => (
+                    {BREAK_INTENTS.map((intent) => (
                       <Pressable
-                        key={tag}
-                        onPress={() => toggleTag(tag)}
-                        className={`px-3 py-2 rounded-lg border ${
-                          contextTags.includes(tag)
-                            ? "bg-blue-600 border-blue-600"
-                            : "bg-slate-900 border-slate-700"
+                        key={intent}
+                        onPress={() => setBreakIntent(intent)}
+                        className={`px-4 py-2 rounded-lg border ${
+                          breakIntent === intent
+                            ? "bg-teal-600 border-teal-600"
+                            : "bg-slate-900 border-slate-800"
                         }`}
                       >
                         <Text
                           className={`text-sm ${
-                            contextTags.includes(tag)
+                            breakIntent === intent
                               ? "text-white font-bold"
-                              : "text-slate-300"
+                              : "text-slate-400"
                           }`}
                         >
-                          {tag}
+                          {intent}
                         </Text>
                       </Pressable>
                     ))}
                   </View>
                 </View>
-              ))}
-            </View>
 
-            <Pressable
-              onPress={handleStartSession}
-              className="bg-green-600 p-4 rounded-xl items-center active:bg-green-700 mt-4"
-            >
-              <Text className="text-white font-bold text-lg">Start Timer</Text>
-            </Pressable>
+                <View className="mb-4">
+                  <Text className="text-slate-400 mb-2">
+                    Planned Duration (min)
+                  </Text>
+                  <View className="flex-row justify-between bg-slate-900 p-2 rounded-xl border border-slate-800">
+                    {["5", "15", "30", "60"].map((duration) => (
+                      <Pressable
+                        key={duration}
+                        onPress={() => setPlannedDuration(duration)}
+                        className={`p-3 rounded-lg ${
+                          plannedDuration === duration
+                            ? "bg-teal-600"
+                            : "bg-transparent"
+                        }`}
+                      >
+                        <Text className="text-white font-bold">{duration}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              </>
+            )}
+
+            {(sessionType === "work" || breakIntent) && (
+              <>
+                <View className="mb-4">
+                  <Text className="text-slate-400 mb-2">Current Mood</Text>
+                  <View className="flex-row flex-wrap gap-2">
+                    {MOOD_OPTIONS.map((item) => (
+                      <Pressable
+                        key={item.label}
+                        onPress={() => setSubjectiveMood(item.label)}
+                        className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
+                          subjectiveMood === item.label
+                            ? sessionType === "work"
+                              ? "bg-blue-600 border-blue-600"
+                              : "bg-teal-600 border-teal-600"
+                            : "bg-slate-900 border-slate-800"
+                        }`}
+                      >
+                        <View className="flex-row items-center gap-2">
+                          <Text className="text-2xl">{item.emoji}</Text>
+                          <Text className="text-white font-bold">
+                            {item.label}
+                          </Text>
+                        </View>
+                        <Text className="text-slate-400 text-xs text-center">
+                          {item.desc}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+
+                <View className="mb-4">
+                  <Text className="text-slate-400 mb-2">
+                    Energy Level (1-10)
+                  </Text>
+                  <View className="flex-row justify-between bg-slate-900 p-2 rounded-xl border border-slate-800">
+                    {[1, 3, 5, 7, 9].map((level) => (
+                      <Pressable
+                        key={level}
+                        onPress={() => setEnergyLevel(level.toString())}
+                        className={`p-3 rounded-lg ${
+                          energyLevel === level.toString()
+                            ? sessionType === "work"
+                              ? "bg-blue-600"
+                              : "bg-teal-600"
+                            : "bg-transparent"
+                        }`}
+                      >
+                        <Text className="text-white font-bold">{level}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              </>
+            )}
+
+            {sessionType === "work" && (
+              <View className="mb-6">
+                <Text className="text-slate-400 mb-4 text-lg font-semibold">
+                  Context Tags
+                </Text>
+                {TAG_CATEGORIES.map((category) => (
+                  <View key={category.title} className="mb-4">
+                    <Text className="text-slate-500 text-xs font-bold mb-2 uppercase tracking-wider">
+                      {category.title}
+                    </Text>
+                    <View className="flex-row flex-wrap gap-2">
+                      {category.tags.map((tag) => (
+                        <Pressable
+                          key={tag}
+                          onPress={() => toggleTag(tag)}
+                          className={`px-3 py-2 rounded-lg border ${
+                            contextTags.includes(tag)
+                              ? "bg-blue-600 border-blue-600"
+                              : "bg-slate-900 border-slate-700"
+                          }`}
+                        >
+                          <Text
+                            className={`text-sm ${
+                              contextTags.includes(tag)
+                                ? "text-white font-bold"
+                                : "text-slate-300"
+                            }`}
+                          >
+                            {tag}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {(sessionType === "work" || breakIntent) && (
+              <Pressable
+                onPress={handleStartSession}
+                className={`p-4 rounded-xl items-center active:opacity-90 mt-4 ${
+                  sessionType === "work" ? "bg-green-600" : "bg-teal-600"
+                }`}
+              >
+                <Text className="text-white font-bold text-lg">
+                  Start Timer
+                </Text>
+              </Pressable>
+            )}
 
             <Pressable
               onPress={handleCancelSession}
@@ -597,36 +862,48 @@ export default function SessionScreen() {
 
         {phase === "active" && (
           <View className="items-center py-10">
-            <Text className="text-slate-400 text-lg mb-2">{jobCategory}</Text>
+            <Text className="text-slate-400 text-lg mb-2">
+              {sessionType === "work"
+                ? jobCategory
+                : breakActivities.length > 0
+                ? breakActivities.join(", ")
+                : "Break Session"}
+            </Text>
             <Text
               className={`text-6xl font-mono font-bold mb-8 ${
-                isOnBreak ? "text-yellow-500" : "text-white"
+                isOnBreak || sessionType === "break"
+                  ? "text-teal-500"
+                  : "text-white"
               }`}
             >
               {formatTime(elapsedTime)}
             </Text>
 
-            {isOnBreak && (
+            {isOnBreak && sessionType === "work" && (
               <View className="bg-yellow-500/20 px-4 py-2 rounded-full mb-8">
                 <Text className="text-yellow-500 font-bold">ON BREAK</Text>
               </View>
             )}
 
             <View className="w-full flex-row gap-4 justify-center">
-              <Pressable
-                onPress={handleToggleBreak}
-                className={`flex-1 p-4 rounded-xl items-center ${
-                  isOnBreak ? "bg-blue-600" : "bg-yellow-600"
-                }`}
-              >
-                <Text className="text-white font-bold text-lg">
-                  {isOnBreak ? "Resume Work" : "Take Break"}
-                </Text>
-              </Pressable>
+              {sessionType === "work" && (
+                <Pressable
+                  onPress={handleToggleBreak}
+                  className={`flex-1 p-4 rounded-xl items-center ${
+                    isOnBreak ? "bg-blue-600" : "bg-yellow-600"
+                  }`}
+                >
+                  <Text className="text-white font-bold text-lg">
+                    {isOnBreak ? "Resume Work" : "Take Break"}
+                  </Text>
+                </Pressable>
+              )}
 
               <Pressable
                 onPress={handleEndSession}
-                className="flex-1 bg-red-600 p-4 rounded-xl items-center"
+                className={`flex-1 bg-red-600 p-4 rounded-xl items-center ${
+                  sessionType === "break" ? "w-full" : ""
+                }`}
               >
                 <Text className="text-white font-bold text-lg">Stop</Text>
               </Pressable>
@@ -637,7 +914,7 @@ export default function SessionScreen() {
         {phase === "post-session" && (
           <View>
             <Text className="text-xl text-white font-semibold mb-4">
-              Session Summary
+              {sessionType === "work" ? "Session Summary" : "Break Summary"}
             </Text>
 
             <View className="bg-slate-900 p-4 rounded-xl mb-6 border border-slate-800">
@@ -648,88 +925,169 @@ export default function SessionScreen() {
                   min
                 </Text>
               </View>
-              <View className="flex-row justify-between mb-2">
-                <Text className="text-slate-400">Break Time</Text>
-                <Text className="text-white font-bold">
-                  {Math.round(accumulatedBreakTime / 60000)} min
-                </Text>
-              </View>
-              <View className="h-[1px] bg-slate-700 my-2" />
-              <View className="flex-row justify-between">
-                <Text className="text-green-400 font-bold">Net Focus</Text>
-                <Text className="text-green-400 font-bold">
-                  {Math.round(
-                    ((startTime ? Date.now() - startTime : 0) -
-                      accumulatedBreakTime) /
-                      60000
-                  )}{" "}
-                  min
-                </Text>
-              </View>
-            </View>
-
-            <View className="mb-4">
-              <Text className="text-slate-400 mb-2">Output Rating</Text>
-              <View className="flex-row gap-2">
-                {["Low", "Medium", "High"].map((rating) => (
-                  <Pressable
-                    key={rating}
-                    onPress={() => setOutputRating(rating)}
-                    className={`flex-1 p-3 rounded-lg items-center border ${
-                      outputRating === rating
-                        ? "bg-blue-600 border-blue-600"
-                        : "bg-slate-900 border-slate-700"
-                    }`}
-                  >
-                    <Text className="text-white font-bold">{rating}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-
-            <View className="mb-4">
-              <Text className="text-slate-400 mb-2">End Mood</Text>
-              <View className="flex-row flex-wrap gap-2">
-                {MOOD_OPTIONS.map((item) => (
-                  <Pressable
-                    key={item.label}
-                    onPress={() => setEndMood(item.label)}
-                    className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
-                      endMood === item.label
-                        ? "bg-blue-600 border-blue-600"
-                        : "bg-slate-900 border-slate-800"
-                    }`}
-                  >
-                    <View className="flex-row items-center gap-2">
-                      <Text className="text-2xl">{item.emoji}</Text>
-                      <Text className="text-white font-bold">{item.label}</Text>
-                    </View>
-                    <Text className="text-slate-400 text-xs text-center">
-                      {item.desc}
+              {sessionType === "work" && (
+                <>
+                  <View className="flex-row justify-between mb-2">
+                    <Text className="text-slate-400">Break Time</Text>
+                    <Text className="text-white font-bold">
+                      {Math.round(accumulatedBreakTime / 60000)} min
                     </Text>
-                  </Pressable>
-                ))}
-              </View>
+                  </View>
+                  <View className="h-[1px] bg-slate-700 my-2" />
+                  <View className="flex-row justify-between">
+                    <Text className="text-green-400 font-bold">Net Focus</Text>
+                    <Text className="text-green-400 font-bold">
+                      {Math.round(
+                        ((startTime ? Date.now() - startTime : 0) -
+                          accumulatedBreakTime) /
+                          60000
+                      )}{" "}
+                      min
+                    </Text>
+                  </View>
+                </>
+              )}
             </View>
 
-            <View className="mb-4">
-              <Text className="text-slate-400 mb-2">Distraction Level</Text>
-              <View className="flex-row gap-2">
-                {["None", "Low", "Medium", "High"].map((level) => (
-                  <Pressable
-                    key={level}
-                    onPress={() => setDistractionLevel(level)}
-                    className={`flex-1 p-3 rounded-lg items-center border ${
-                      distractionLevel === level
-                        ? "bg-purple-600 border-purple-600"
-                        : "bg-slate-900 border-slate-700"
-                    }`}
-                  >
-                    <Text className="text-white font-bold">{level}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
+            {sessionType === "work" ? (
+              <>
+                <View className="mb-4">
+                  <Text className="text-slate-400 mb-2">Output Rating</Text>
+                  <View className="flex-row gap-2">
+                    {["Low", "Medium", "High"].map((rating) => (
+                      <Pressable
+                        key={rating}
+                        onPress={() => setOutputRating(rating)}
+                        className={`flex-1 p-3 rounded-lg items-center border ${
+                          outputRating === rating
+                            ? "bg-blue-600 border-blue-600"
+                            : "bg-slate-900 border-slate-700"
+                        }`}
+                      >
+                        <Text className="text-white font-bold">{rating}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+
+                <View className="mb-4">
+                  <Text className="text-slate-400 mb-2">End Mood</Text>
+                  <View className="flex-row flex-wrap gap-2">
+                    {MOOD_OPTIONS.map((item) => (
+                      <Pressable
+                        key={item.label}
+                        onPress={() => setEndMood(item.label)}
+                        className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
+                          endMood === item.label
+                            ? "bg-blue-600 border-blue-600"
+                            : "bg-slate-900 border-slate-800"
+                        }`}
+                      >
+                        <View className="flex-row items-center gap-2">
+                          <Text className="text-2xl">{item.emoji}</Text>
+                          <Text className="text-white font-bold">
+                            {item.label}
+                          </Text>
+                        </View>
+                        <Text className="text-slate-400 text-xs text-center">
+                          {item.desc}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+
+                <View className="mb-4">
+                  <Text className="text-slate-400 mb-2">Distraction Level</Text>
+                  <View className="flex-row gap-2">
+                    {["None", "Low", "Medium", "High"].map((level) => (
+                      <Pressable
+                        key={level}
+                        onPress={() => setDistractionLevel(level)}
+                        className={`flex-1 p-3 rounded-lg items-center border ${
+                          distractionLevel === level
+                            ? "bg-purple-600 border-purple-600"
+                            : "bg-slate-900 border-slate-700"
+                        }`}
+                      >
+                        <Text className="text-white font-bold">{level}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              </>
+            ) : (
+              <>
+                <View className="mb-4">
+                  <Text className="text-slate-400 mb-2">
+                    Activities (Select all that apply)
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <View className="flex-row gap-2">
+                      {BREAK_ACTIVITIES.map((activity) => (
+                        <Pressable
+                          key={activity}
+                          onPress={() => toggleBreakActivity(activity)}
+                          className={`px-4 py-2 rounded-lg border ${
+                            breakActivities.includes(activity)
+                              ? "bg-teal-600 border-teal-600"
+                              : "bg-slate-900 border-slate-800"
+                          }`}
+                        >
+                          <Text
+                            className={`text-sm ${
+                              breakActivities.includes(activity)
+                                ? "text-white font-bold"
+                                : "text-slate-400"
+                            }`}
+                          >
+                            {activity}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </ScrollView>
+                </View>
+
+                <View className="mb-4">
+                  <Text className="text-slate-400 mb-2">Guilt Rating</Text>
+                  <View className="flex-row gap-2">
+                    {["None", "Low", "Medium", "High"].map((rating) => (
+                      <Pressable
+                        key={rating}
+                        onPress={() => setGuiltRating(rating)}
+                        className={`flex-1 p-3 rounded-lg items-center border ${
+                          guiltRating === rating
+                            ? "bg-teal-600 border-teal-600"
+                            : "bg-slate-900 border-slate-700"
+                        }`}
+                      >
+                        <Text className="text-white font-bold">{rating}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+
+                <View className="mb-4">
+                  <Text className="text-slate-400 mb-2">Recovery Rating</Text>
+                  <View className="flex-row gap-2">
+                    {["Low", "Medium", "High"].map((rating) => (
+                      <Pressable
+                        key={rating}
+                        onPress={() => setRecoveryRating(rating)}
+                        className={`flex-1 p-3 rounded-lg items-center border ${
+                          recoveryRating === rating
+                            ? "bg-teal-600 border-teal-600"
+                            : "bg-slate-900 border-slate-700"
+                        }`}
+                      >
+                        <Text className="text-white font-bold">{rating}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              </>
+            )}
 
             <View className="mb-6">
               <Text className="text-slate-400 mb-2">Notes</Text>
@@ -748,7 +1106,11 @@ export default function SessionScreen() {
               onPress={handleSaveSession}
               disabled={loading}
               className={`p-4 rounded-xl items-center ${
-                loading ? "bg-blue-800" : "bg-blue-600 active:bg-blue-700"
+                loading
+                  ? "bg-slate-800"
+                  : sessionType === "work"
+                  ? "bg-blue-600 active:bg-blue-700"
+                  : "bg-teal-600 active:bg-teal-700"
               }`}
             >
               {loading ? (
