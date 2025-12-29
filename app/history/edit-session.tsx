@@ -122,9 +122,40 @@ export default function EditSessionScreen() {
         const datePrefix = date as string;
         let parsedStartTime = new Date();
 
+        const parseTimeStr = (dateStr: string, timeStr: string) => {
+          if (!timeStr) return null;
+          // Clean invisible characters (like narrow non-breaking space)
+          const cleanTime = timeStr.replace(/[\u202F\u00A0]/g, " ").trim();
+
+          // Try standard parsing
+          let d = new Date(`${dateStr} ${cleanTime}`);
+          if (!isNaN(d.getTime())) return d;
+
+          // Fallback: Manual Parse
+          // Matches 8:24:36 AM or 8:24 AM or 08:24:36
+          const match = cleanTime.match(/(\d+):(\d+)(?::(\d+))?\s*(AM|PM)?/i);
+          if (match) {
+            let [_, hStr, mStr, sStr, period] = match;
+            let h = parseInt(hStr);
+            const m = parseInt(mStr);
+            const s = sStr ? parseInt(sStr) : 0;
+
+            if (period) {
+              const p = period.toUpperCase();
+              if (p === "PM" && h < 12) h += 12;
+              if (p === "AM" && h === 12) h = 0;
+            }
+
+            const [year, month, day] = dateStr.split("-").map(Number);
+            // Note: month is 0-indexed in Date constructor
+            return new Date(year, month - 1, day, h, m, s);
+          }
+          return null;
+        };
+
         if (session.pre_session?.start_time) {
-          const d = new Date(`${datePrefix} ${session.pre_session.start_time}`);
-          if (!isNaN(d.getTime())) {
+          const d = parseTimeStr(datePrefix, session.pre_session.start_time);
+          if (d) {
             setStartTime(d);
             parsedStartTime = d;
           }
@@ -133,10 +164,8 @@ export default function EditSessionScreen() {
         if (session.post_session) {
           let endTimeSet = false;
           if (session.post_session.end_time) {
-            const d = new Date(
-              `${datePrefix} ${session.post_session.end_time}`
-            );
-            if (!isNaN(d.getTime())) {
+            const d = parseTimeStr(datePrefix, session.post_session.end_time);
+            if (d) {
               setEndTime(d);
               endTimeSet = true;
             }

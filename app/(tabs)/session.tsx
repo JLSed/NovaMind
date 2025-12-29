@@ -171,6 +171,15 @@ export default function SessionScreen() {
     setPhase("post-session");
   };
 
+  // Helper to get local date string YYYY-MM-DD
+  const getLocalYYYYMMDD = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   const handleSaveSession = async () => {
     console.log("Attempting to save session...");
     setLoading(true);
@@ -224,7 +233,7 @@ export default function SessionScreen() {
 
       console.log("New Session Object:", JSON.stringify(newSession, null, 2));
 
-      const today = new Date().toISOString().split("T")[0];
+      const today = getLocalYYYYMMDD();
 
       // Fetch existing log
       const { data: existingLog, error: fetchError } = await supabase
