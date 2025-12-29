@@ -1,5 +1,6 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { supabase } from "@/lib/supabase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -14,6 +15,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 // Types based on the JSON structure
 type SessionPhase = "idle" | "pre-session" | "active" | "post-session";
+
+const CURRENT_SESSION_KEY = "nova_current_session";
 
 const TAG_CATEGORIES = [
   {
@@ -86,8 +89,137 @@ export default function SessionScreen() {
   const [distractionLevel, setDistractionLevel] = useState("Low");
   const [userNotes, setUserNotes] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const timerRef = useRef<any>(null);
+
+  // Load session on mount
+  useEffect(() => {
+    loadCurrentSession();
+  }, []);
+
+  // Save session on change
+  useEffect(() => {
+    if (isLoaded && phase !== "idle") {
+      saveCurrentSession();
+    }
+  }, [
+    phase,
+    jobCategory,
+    subjectiveMood,
+    energyLevel,
+    contextTags,
+    startTime,
+    isOnBreak,
+    breakStartTime,
+    accumulatedBreakTime,
+    outputRating,
+    endMood,
+    distractionLevel,
+    userNotes,
+    isLoaded,
+  ]);
+
+  const saveCurrentSession = async () => {
+    try {
+      const sessionData = {
+        phase,
+        jobCategory,
+        subjectiveMood,
+        energyLevel,
+        contextTags,
+        startTime,
+        isOnBreak,
+        breakStartTime,
+        accumulatedBreakTime,
+        outputRating,
+        endMood,
+        distractionLevel,
+        userNotes,
+        savedAt: Date.now(),
+      };
+      await AsyncStorage.setItem(
+        CURRENT_SESSION_KEY,
+        JSON.stringify(sessionData)
+      );
+    } catch (e) {
+      console.error("Failed to save session", e);
+    }
+  };
+
+  const loadCurrentSession = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(CURRENT_SESSION_KEY);
+      if (jsonValue != null) {
+        const data = JSON.parse(jsonValue);
+        // Restore state
+        setPhase(data.phase);
+        setJobCategory(data.jobCategory);
+        setSubjectiveMood(data.subjectiveMood);
+        setEnergyLevel(data.energyLevel);
+        setContextTags(data.contextTags);
+        setStartTime(data.startTime);
+        setIsOnBreak(data.isOnBreak);
+        setBreakStartTime(data.breakStartTime);
+        setAccumulatedBreakTime(data.accumulatedBreakTime);
+        setOutputRating(data.outputRating);
+        setEndMood(data.endMood);
+        setDistractionLevel(data.distractionLevel);
+        setUserNotes(data.userNotes);
+
+        // Recalculate elapsed time if active
+        if (data.phase === "active" && data.startTime) {
+          const now = Date.now();
+          setElapsedTime(now - data.startTime);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load session", e);
+    } finally {
+      setIsLoaded(true);
+    }
+  };
+
+  const clearCurrentSession = async () => {
+    try {
+      await AsyncStorage.removeItem(CURRENT_SESSION_KEY);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleCancelSession = () => {
+    setPhase("idle");
+    clearCurrentSession();
+    // Reset other state if needed, though setPhase('idle') usually hides them
+    setJobCategory("");
+    setSubjectiveMood("");
+    setContextTags([]);
+  };
+
+  const handleDiscardSession = () => {
+    Alert.alert(
+      "Discard Session?",
+      "Are you sure you want to discard this session? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Discard",
+          style: "destructive",
+          onPress: () => {
+            handleCancelSession();
+            // Also reset post-session specific state
+            setStartTime(null);
+            setAccumulatedBreakTime(0);
+            setElapsedTime(0);
+            setIsOnBreak(false);
+            setUserNotes("");
+            setEndMood("");
+          },
+        },
+      ]
+    );
+  };
 
   // Timer Logic
   useEffect(() => {
@@ -276,6 +408,9 @@ export default function SessionScreen() {
       console.log("Session saved successfully to Supabase");
       Alert.alert("Success", "Session saved successfully!");
 
+      // Clear persistent storage
+      await clearCurrentSession();
+
       // Reset State
       setPhase("idle");
       setJobCategory("");
@@ -429,7 +564,7 @@ export default function SessionScreen() {
             </Pressable>
 
             <Pressable
-              onPress={() => setPhase("idle")}
+              onPress={handleCancelSession}
               className="p-4 rounded-xl items-center mt-2"
             >
               <Text className="text-slate-400">Cancel</Text>
@@ -604,6 +739,16 @@ export default function SessionScreen() {
                   Save Session
                 </Text>
               )}
+            </Pressable>
+
+            <Pressable
+              onPress={handleDiscardSession}
+              disabled={loading}
+              className="p-4 rounded-xl items-center mt-4"
+            >
+              <Text className="text-red-500 font-bold text-lg">
+                Discard Session
+              </Text>
             </Pressable>
           </View>
         )}
