@@ -82,11 +82,11 @@ export default function EditSessionScreen() {
 
   // Post-Session
   const [endTime, setEndTime] = useState<Date>(new Date());
-  const [breakDuration, setBreakDuration] = useState("0");
   const [outputRating, setOutputRating] = useState("Medium");
   const [endMood, setEndMood] = useState("");
   const [distractionLevel, setDistractionLevel] = useState("Low");
   const [userNotes, setUserNotes] = useState("");
+  const [breaks, setBreaks] = useState<any[]>([]);
 
   // Pickers
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
@@ -184,13 +184,11 @@ export default function EditSessionScreen() {
         setEnergyLevel(session.pre_session?.energy_level?.toString() || "5");
         setContextTags(session.pre_session?.context_tags || []);
 
-        setBreakDuration(
-          session.post_session?.break_duration_minutes?.toString() || "0"
-        );
         setOutputRating(session.post_session?.output_rating || "Medium");
         setEndMood(session.post_session?.end_mood || "");
         setDistractionLevel(session.post_session?.distraction_level || "Low");
         setUserNotes(session.post_session?.user_notes || "");
+        setBreaks(session.breaks || []);
       }
     } catch (error) {
       console.error("Error fetching session:", error);
@@ -208,6 +206,73 @@ export default function EditSessionScreen() {
     }
   };
 
+  const addBreak = () => {
+    setBreaks([
+      ...breaks,
+      {
+        break_start: new Date().toLocaleTimeString(),
+        break_end: new Date().toLocaleTimeString(),
+        break_description: "",
+      },
+    ]);
+  };
+
+  const updateBreak = (index: number, field: string, value: string) => {
+    const updatedBreaks = [...breaks];
+    updatedBreaks[index] = { ...updatedBreaks[index], [field]: value };
+    setBreaks(updatedBreaks);
+  };
+
+  const removeBreak = (index: number) => {
+    const updatedBreaks = breaks.filter((_, i) => i !== index);
+    setBreaks(updatedBreaks);
+  };
+
+  const calculateTotalBreakMinutes = (breaksList: any[]) => {
+    if (!breaksList || breaksList.length === 0) return 0;
+
+    let totalMinutes = 0;
+    const datePrefix = date as string;
+
+    const parseTimeStr = (dateStr: string, timeStr: string) => {
+      if (!timeStr) return null;
+      const cleanTime = timeStr.replace(/[\u202F\u00A0]/g, " ").trim();
+      let d = new Date(`${dateStr} ${cleanTime}`);
+      if (!isNaN(d.getTime())) return d;
+
+      const match = cleanTime.match(/(\d+):(\d+)(?::(\d+))?\s*(AM|PM)?/i);
+      if (match) {
+        let [_, hStr, mStr, sStr, period] = match;
+        let h = parseInt(hStr);
+        const m = parseInt(mStr);
+        const s = sStr ? parseInt(sStr) : 0;
+        if (period) {
+          const p = period.toUpperCase();
+          if (p === "PM" && h < 12) h += 12;
+          if (p === "AM" && h === 12) h = 0;
+        }
+        const [year, month, day] = dateStr.split("-").map(Number);
+        return new Date(year, month - 1, day, h, m, s);
+      }
+      return null;
+    };
+
+    breaksList.forEach((brk) => {
+      if (brk.break_start && brk.break_end) {
+        const start = parseTimeStr(datePrefix, brk.break_start);
+        const end = parseTimeStr(datePrefix, brk.break_end);
+
+        if (start && end) {
+          let diffMs = end.getTime() - start.getTime();
+          if (diffMs < 0) diffMs = 0;
+          totalMinutes += diffMs / 60000;
+        }
+      }
+    });
+
+    return Math.round(totalMinutes);
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -220,7 +285,9 @@ export default function EditSessionScreen() {
       const startMs = startTime.getTime();
       const endMs = endTime.getTime();
       const totalDurationMinutes = Math.round((endMs - startMs) / 60000);
-      const breakMinutes = parseInt(breakDuration) || 0;
+
+      // Calculate break duration from breaks array
+      const breakMinutes = calculateTotalBreakMinutes(breaks);
       const netFocusMinutes = totalDurationMinutes - breakMinutes;
 
       const updatedSession = {
@@ -232,6 +299,7 @@ export default function EditSessionScreen() {
           context_tags: contextTags,
           energy_level: parseInt(energyLevel),
         },
+        breaks: breaks,
         post_session: {
           end_time: endTime.toLocaleTimeString(),
           total_duration_minutes: totalDurationMinutes,
@@ -379,14 +447,13 @@ export default function EditSessionScreen() {
 
           <View>
             <Text className="text-slate-500 mb-1">
-              Break Duration (minutes)
+              Total Break Duration (Calculated)
             </Text>
-            <TextInput
-              className="bg-slate-700 text-white p-3 rounded-lg text-center"
-              value={breakDuration}
-              onChangeText={setBreakDuration}
-              keyboardType="numeric"
-            />
+            <View className="bg-slate-700 p-3 rounded-lg">
+              <Text className="text-white text-center font-bold">
+                {calculateTotalBreakMinutes(breaks)} min
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -466,6 +533,73 @@ export default function EditSessionScreen() {
                     </Text>
                   </Pressable>
                 ))}
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* Breaks Section */}
+        <View className="mb-6">
+          <View className="flex-row justify-between items-center mb-4">
+            <Text className="text-white text-lg font-bold">Breaks</Text>
+            <Pressable
+              onPress={addBreak}
+              className="bg-blue-600 px-3 py-1 rounded-lg"
+            >
+              <Text className="text-white font-bold text-sm">+ Add Break</Text>
+            </Pressable>
+          </View>
+
+          {breaks.map((brk, idx) => (
+            <View
+              key={idx}
+              className="bg-slate-800 p-4 rounded-xl border border-slate-700 mb-4"
+            >
+              <View className="flex-row justify-between mb-2">
+                <Text className="text-slate-400 font-bold">
+                  Break #{idx + 1}
+                </Text>
+                <Pressable onPress={() => removeBreak(idx)}>
+                  <IconSymbol name="trash" size={20} color="#ef4444" />
+                </Pressable>
+              </View>
+
+              <View className="flex-row gap-2 mb-2">
+                <View className="flex-1">
+                  <Text className="text-slate-500 text-xs mb-1">Start</Text>
+                  <TextInput
+                    className="bg-slate-900 text-white p-2 rounded-lg border border-slate-700"
+                    value={brk.break_start}
+                    onChangeText={(text) =>
+                      updateBreak(idx, "break_start", text)
+                    }
+                    placeholder="Start Time"
+                    placeholderTextColor="#64748b"
+                  />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-slate-500 text-xs mb-1">End</Text>
+                  <TextInput
+                    className="bg-slate-900 text-white p-2 rounded-lg border border-slate-700"
+                    value={brk.break_end}
+                    onChangeText={(text) => updateBreak(idx, "break_end", text)}
+                    placeholder="End Time"
+                    placeholderTextColor="#64748b"
+                  />
+                </View>
+              </View>
+
+              <View>
+                <Text className="text-slate-500 text-xs mb-1">Reason</Text>
+                <TextInput
+                  className="bg-slate-900 text-white p-2 rounded-lg border border-slate-700"
+                  value={brk.break_description}
+                  onChangeText={(text) =>
+                    updateBreak(idx, "break_description", text)
+                  }
+                  placeholder="Why did you take a break?"
+                  placeholderTextColor="#64748b"
+                />
               </View>
             </View>
           ))}

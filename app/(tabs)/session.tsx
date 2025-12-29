@@ -1,10 +1,11 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { supabase } from "@/lib/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Modal,
   Pressable,
   ScrollView,
   Text,
@@ -82,6 +83,9 @@ export default function SessionScreen() {
   const [breakStartTime, setBreakStartTime] = useState<number | null>(null);
   const [accumulatedBreakTime, setAccumulatedBreakTime] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0); // For display only
+  const [breaks, setBreaks] = useState<any[]>([]);
+  const [showBreakModal, setShowBreakModal] = useState(false);
+  const [breakReason, setBreakReason] = useState("");
 
   // Post-Session State
   const [outputRating, setOutputRating] = useState("Medium");
@@ -99,28 +103,7 @@ export default function SessionScreen() {
   }, []);
 
   // Save session on change
-  useEffect(() => {
-    if (isLoaded && phase !== "idle") {
-      saveCurrentSession();
-    }
-  }, [
-    phase,
-    jobCategory,
-    subjectiveMood,
-    energyLevel,
-    contextTags,
-    startTime,
-    isOnBreak,
-    breakStartTime,
-    accumulatedBreakTime,
-    outputRating,
-    endMood,
-    distractionLevel,
-    userNotes,
-    isLoaded,
-  ]);
-
-  const saveCurrentSession = async () => {
+  const saveCurrentSession = useCallback(async () => {
     try {
       const sessionData = {
         phase,
@@ -136,6 +119,8 @@ export default function SessionScreen() {
         endMood,
         distractionLevel,
         userNotes,
+        breaks,
+        breakReason,
         savedAt: Date.now(),
       };
       await AsyncStorage.setItem(
@@ -145,7 +130,29 @@ export default function SessionScreen() {
     } catch (e) {
       console.error("Failed to save session", e);
     }
-  };
+  }, [
+    phase,
+    jobCategory,
+    subjectiveMood,
+    energyLevel,
+    contextTags,
+    startTime,
+    isOnBreak,
+    breakStartTime,
+    accumulatedBreakTime,
+    outputRating,
+    endMood,
+    distractionLevel,
+    userNotes,
+    breaks,
+    breakReason,
+  ]);
+
+  useEffect(() => {
+    if (isLoaded && phase !== "idle") {
+      saveCurrentSession();
+    }
+  }, [isLoaded, phase, saveCurrentSession]);
 
   const loadCurrentSession = async () => {
     try {
@@ -166,6 +173,8 @@ export default function SessionScreen() {
         setEndMood(data.endMood);
         setDistractionLevel(data.distractionLevel);
         setUserNotes(data.userNotes);
+        setBreaks(data.breaks || []);
+        setBreakReason(data.breakReason || "");
 
         // Recalculate elapsed time if active
         if (data.phase === "active" && data.startTime) {
@@ -277,15 +286,36 @@ export default function SessionScreen() {
           console.log("New accumulated break time (ms):", newTotal);
           return newTotal;
         });
+
+        // Add to breaks list
+        setBreaks((prev) => [
+          ...prev,
+          {
+            break_start: new Date(breakStartTime).toLocaleTimeString(),
+            break_end: new Date(now).toLocaleTimeString(),
+            break_description: breakReason,
+          },
+        ]);
       }
       setBreakStartTime(null);
       setIsOnBreak(false);
+      setBreakReason("");
     } else {
-      // Start Break
-      console.log("Starting break at:", now);
-      setBreakStartTime(now);
-      setIsOnBreak(true);
+      // Start Break - Show Modal
+      setShowBreakModal(true);
     }
+  };
+
+  const confirmStartBreak = () => {
+    if (!breakReason.trim()) {
+      Alert.alert("Reason Required", "Please enter a reason for your break.");
+      return;
+    }
+    const now = Date.now();
+    console.log("Starting break at:", now);
+    setBreakStartTime(now);
+    setIsOnBreak(true);
+    setShowBreakModal(false);
   };
 
   const handleEndSession = () => {
@@ -299,6 +329,16 @@ export default function SessionScreen() {
         finalBreakChunk
       );
       setAccumulatedBreakTime((prev) => prev + finalBreakChunk);
+
+      // Add to breaks list
+      setBreaks((prev) => [
+        ...prev,
+        {
+          break_start: new Date(breakStartTime).toLocaleTimeString(),
+          break_end: new Date(now).toLocaleTimeString(),
+          break_description: breakReason,
+        },
+      ]);
     }
     setPhase("post-session");
   };
@@ -310,6 +350,36 @@ export default function SessionScreen() {
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
+  };
+
+  const calculateTotalBreakMinutes = (breaksList: any[]) => {
+    if (!breaksList || breaksList.length === 0) return 0;
+
+    let totalMinutes = 0;
+    const today = new Date().toISOString().split("T")[0]; // Use today for parsing context
+
+    breaksList.forEach((brk) => {
+      if (brk.break_start && brk.break_end) {
+        // Simple parsing assuming standard time format or Date string
+        // Since we save as toLocaleTimeString(), we need to be careful.
+        // Best effort: try to parse.
+        const start = new Date(`${today} ${brk.break_start}`);
+        const end = new Date(`${today} ${brk.break_end}`);
+
+        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+          let diffMs = end.getTime() - start.getTime();
+          if (diffMs < 0) {
+            // Handle crossing midnight or parsing errors where end < start
+            // For now, ignore negative durations or assume next day?
+            // Let's assume same day for simplicity in this context
+            diffMs = 0;
+          }
+          totalMinutes += diffMs / 60000;
+        }
+      }
+    });
+
+    return Math.round(totalMinutes);
   };
 
   const handleSaveSession = async () => {
@@ -329,7 +399,10 @@ export default function SessionScreen() {
       const endTime = Date.now();
       const totalDurationMs = startTime ? endTime - startTime : 0;
       const totalDurationMinutes = Math.round(totalDurationMs / 60000);
-      const breakDurationMinutes = Math.round(accumulatedBreakTime / 60000);
+
+      // Calculate break duration from the breaks array
+      const breakDurationMinutes = calculateTotalBreakMinutes(breaks);
+
       const netFocusMinutes = totalDurationMinutes - breakDurationMinutes;
 
       console.log("Session Calculations:", {
@@ -351,6 +424,7 @@ export default function SessionScreen() {
           context_tags: contextTags,
           energy_level: parseInt(energyLevel),
         },
+        breaks: breaks,
         post_session: {
           end_time: new Date(endTime).toLocaleTimeString(),
           total_duration_minutes: totalDurationMinutes,
@@ -753,6 +827,46 @@ export default function SessionScreen() {
           </View>
         )}
       </ScrollView>
+
+      <Modal
+        visible={showBreakModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowBreakModal(false)}
+      >
+        <View className="flex-1 bg-black/80 items-center justify-center p-4">
+          <View className="bg-slate-900 w-full max-w-sm p-6 rounded-2xl border border-slate-800">
+            <Text className="text-white text-xl font-bold mb-4">
+              Taking a Break?
+            </Text>
+            <Text className="text-slate-400 mb-4">
+              Why are you pausing? (e.g. Lunch, Fatigue, Distraction)
+            </Text>
+            <TextInput
+              className="bg-slate-950 text-white p-4 rounded-xl border border-slate-800 mb-6"
+              placeholder="Reason..."
+              placeholderTextColor="#64748b"
+              value={breakReason}
+              onChangeText={setBreakReason}
+              autoFocus
+            />
+            <View className="flex-row gap-4">
+              <Pressable
+                onPress={() => setShowBreakModal(false)}
+                className="flex-1 p-4 rounded-xl items-center bg-slate-800"
+              >
+                <Text className="text-white font-bold">Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={confirmStartBreak}
+                className="flex-1 p-4 rounded-xl items-center bg-blue-600"
+              >
+                <Text className="text-white font-bold">Start Break</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
