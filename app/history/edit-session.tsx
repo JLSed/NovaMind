@@ -224,8 +224,17 @@ export default function EditSessionScreen() {
   };
 
   const removeBreak = (index: number) => {
-    const updatedBreaks = breaks.filter((_, i) => i !== index);
-    setBreaks(updatedBreaks);
+    Alert.alert("Delete Break", "Are you sure you want to delete this break?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          const updatedBreaks = breaks.filter((_, i) => i !== index);
+          setBreaks(updatedBreaks);
+        },
+      },
+    ]);
   };
 
   const calculateTotalBreakMinutes = (breaksList: any[]) => {
@@ -572,7 +581,7 @@ export default function EditSessionScreen() {
                   Break #{idx + 1}
                 </Text>
                 <Pressable onPress={() => removeBreak(idx)}>
-                  <IconSymbol name="trash" size={20} color="#ef4444" />
+                  <IconSymbol name="trash.fill" size={20} color="#ef4444" />
                 </Pressable>
               </View>
 
