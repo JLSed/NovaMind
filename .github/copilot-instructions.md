@@ -67,3 +67,5 @@
 ## 🚨 Instruction
 
 -- stop changing the AI model being used in the project. it should always be "gemini-flash-latest"
+-- before adding a function, constant, or component, check if there is an existing one that can be reused or extended to avoid duplication.
+-- create a list of function, constant, or component that might be reusable or extendable then read the list to check if the requested prompt can use components in this list.

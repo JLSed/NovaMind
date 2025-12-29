@@ -1,4 +1,5 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { MOOD_OPTIONS, TAG_CATEGORIES } from "@/constants/data";
 import { supabase } from "@/lib/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -18,54 +19,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 type SessionPhase = "idle" | "pre-session" | "active" | "post-session";
 
 const CURRENT_SESSION_KEY = "nova_current_session";
-
-const TAG_CATEGORIES = [
-  {
-    title: "Fuel (Intake & Biology)",
-    tags: [
-      "Caffeinated",
-      "Fasted",
-      "Heavy Meal",
-      "Hydrated",
-      "Sugar Rush",
-      "Medicated",
-      "Post-Workout",
-      "Post-Nap",
-    ],
-  },
-  {
-    title: "Environment (Location & Vibe)",
-    tags: [
-      "Home Office",
-      "Cafe / Public",
-      "Bedroom",
-      "Outdoors",
-      "Quiet Zone",
-      "Noisy",
-      "Cold Room",
-      "Warm Room",
-    ],
-  },
-  {
-    title: "Sensory (Audio & Visual)",
-    tags: [
-      "No Music",
-      "Lyrical Music",
-      "Instrumental / Lo-Fi",
-      "White Noise",
-      "Phone Away",
-      "Notifications On",
-    ],
-  },
-  {
-    title: "Pressure (Psychological State)",
-    tags: ["Deadline", "Backlog", "Passion Project", "Forced", "Blocked"],
-  },
-  {
-    title: "Social",
-    tags: ["Alone", "Co-working", "Interrupted"],
-  },
-];
 
 export default function SessionScreen() {
   const [phase, setPhase] = useState<SessionPhase>("idle");
@@ -549,27 +502,23 @@ export default function SessionScreen() {
             <View className="mb-4">
               <Text className="text-slate-400 mb-2">Current Mood</Text>
               <View className="flex-row flex-wrap gap-2">
-                {[
-                  { label: "On Fire", emoji: "🔥" },
-                  { label: "Focused", emoji: "🧠" },
-                  { label: "Anxious", emoji: "😰" },
-                  { label: "Bored", emoji: "😑" },
-                  { label: "Foggy", emoji: "☁️" },
-                  { label: "Resistance", emoji: "🛑" },
-                  { label: "Drained", emoji: "🔋" },
-                  { label: "Neutral", emoji: "😐" },
-                ].map((item) => (
+                {MOOD_OPTIONS.map((item) => (
                   <Pressable
                     key={item.label}
                     onPress={() => setSubjectiveMood(item.label)}
-                    className={`w-[48%] p-3 rounded-xl border flex-row items-center justify-center gap-2 ${
+                    className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
                       subjectiveMood === item.label
                         ? "bg-blue-600 border-blue-600"
                         : "bg-slate-900 border-slate-800"
                     }`}
                   >
-                    <Text className="text-2xl">{item.emoji}</Text>
-                    <Text className="text-white font-bold">{item.label}</Text>
+                    <View className="flex-row items-center gap-2">
+                      <Text className="text-2xl">{item.emoji}</Text>
+                      <Text className="text-white font-bold">{item.label}</Text>
+                    </View>
+                    <Text className="text-slate-400 text-xs text-center">
+                      {item.desc}
+                    </Text>
                   </Pressable>
                 ))}
               </View>
@@ -741,27 +690,23 @@ export default function SessionScreen() {
             <View className="mb-4">
               <Text className="text-slate-400 mb-2">End Mood</Text>
               <View className="flex-row flex-wrap gap-2">
-                {[
-                  { label: "On Fire", emoji: "🔥" },
-                  { label: "Focused", emoji: "🧠" },
-                  { label: "Anxious", emoji: "😰" },
-                  { label: "Bored", emoji: "😑" },
-                  { label: "Foggy", emoji: "☁️" },
-                  { label: "Resistance", emoji: "🛑" },
-                  { label: "Drained", emoji: "🔋" },
-                  { label: "Neutral", emoji: "😐" },
-                ].map((item) => (
+                {MOOD_OPTIONS.map((item) => (
                   <Pressable
                     key={item.label}
                     onPress={() => setEndMood(item.label)}
-                    className={`w-[48%] p-3 rounded-xl border flex-row items-center justify-center gap-2 ${
+                    className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
                       endMood === item.label
                         ? "bg-blue-600 border-blue-600"
                         : "bg-slate-900 border-slate-800"
                     }`}
                   >
-                    <Text className="text-2xl">{item.emoji}</Text>
-                    <Text className="text-white font-bold">{item.label}</Text>
+                    <View className="flex-row items-center gap-2">
+                      <Text className="text-2xl">{item.emoji}</Text>
+                      <Text className="text-white font-bold">{item.label}</Text>
+                    </View>
+                    <Text className="text-slate-400 text-xs text-center">
+                      {item.desc}
+                    </Text>
                   </Pressable>
                 ))}
               </View>

@@ -1,6 +1,8 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { MOOD_OPTIONS } from "@/constants/data";
 import { generateSchedule } from "@/lib/gemini";
 import { supabase } from "@/lib/supabase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Link, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
@@ -13,6 +15,8 @@ import {
 } from "react-native";
 import Markdown from "react-native-markdown-display";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const SCHEDULE_STORAGE_KEY = "nova_ai_schedule";
 
 export default function ScheduleScreen() {
   const router = useRouter();
@@ -48,6 +52,21 @@ export default function ScheduleScreen() {
 
   const checkMorningLog = async () => {
     try {
+      // Load saved schedule
+      const savedDataString = await AsyncStorage.getItem(SCHEDULE_STORAGE_KEY);
+      if (savedDataString) {
+        try {
+          const savedData = JSON.parse(savedDataString);
+          // Only restore if it's from today
+          if (savedData.date === getLocalYYYYMMDD()) {
+            setAdvice(savedData.schedule);
+          }
+        } catch (e) {
+          // If parsing fails, ignore or handle legacy format
+          console.log("Failed to parse saved schedule", e);
+        }
+      }
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -123,6 +142,16 @@ export default function ScheduleScreen() {
       );
 
       setAdvice(aiResponse);
+
+      // Save with date to ensure freshness
+      const dataToSave = {
+        date: getLocalYYYYMMDD(),
+        schedule: aiResponse,
+      };
+      await AsyncStorage.setItem(
+        SCHEDULE_STORAGE_KEY,
+        JSON.stringify(dataToSave)
+      );
     } catch (error: any) {
       console.error(error);
       Alert.alert("Error", error.message || "Failed to generate schedule");
@@ -158,27 +187,23 @@ export default function ScheduleScreen() {
             How do you feel RIGHT NOW?
           </Text>
           <View className="flex-row flex-wrap gap-2 mb-4">
-            {[
-              { label: "On Fire", emoji: "🔥" },
-              { label: "Focused", emoji: "🧠" },
-              { label: "Anxious", emoji: "😰" },
-              { label: "Bored", emoji: "😑" },
-              { label: "Foggy", emoji: "☁️" },
-              { label: "Resistance", emoji: "🛑" },
-              { label: "Drained", emoji: "🔋" },
-              { label: "Neutral", emoji: "😐" },
-            ].map((item) => (
+            {MOOD_OPTIONS.map((item) => (
               <Pressable
                 key={item.label}
                 onPress={() => setCurrentMood(item.label)}
-                className={`w-[48%] p-3 rounded-xl border flex-row items-center justify-center gap-2 ${
+                className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
                   currentMood === item.label
                     ? "bg-blue-600 border-blue-600"
                     : "bg-slate-800 border-slate-700"
                 }`}
               >
-                <Text className="text-2xl">{item.emoji}</Text>
-                <Text className="text-white font-bold">{item.label}</Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-2xl">{item.emoji}</Text>
+                  <Text className="text-white font-bold">{item.label}</Text>
+                </View>
+                <Text className="text-slate-400 text-xs text-center">
+                  {item.desc}
+                </Text>
               </Pressable>
             ))}
           </View>

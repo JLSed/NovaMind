@@ -1,4 +1,5 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { MOOD_OPTIONS } from "@/constants/data";
 import { supabase } from "@/lib/supabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
@@ -261,27 +262,23 @@ export default function DailyLogScreen() {
             How did you wake up feeling?
           </Text>
           <View className="flex-row flex-wrap gap-2 mb-4">
-            {[
-              { label: "On Fire", emoji: "🔥" },
-              { label: "Focused", emoji: "🧠" },
-              { label: "Anxious", emoji: "😰" },
-              { label: "Bored", emoji: "😑" },
-              { label: "Foggy", emoji: "☁️" },
-              { label: "Resistance", emoji: "🛑" },
-              { label: "Drained", emoji: "🔋" },
-              { label: "Neutral", emoji: "😐" },
-            ].map((item) => (
+            {MOOD_OPTIONS.map((item) => (
               <Pressable
                 key={item.label}
                 onPress={() => setMood(item.label)}
-                className={`w-[48%] p-3 rounded-xl border flex-row items-center justify-center gap-2 ${
+                className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
                   mood === item.label
                     ? "bg-blue-600 border-blue-600"
                     : "bg-slate-800 border-slate-700"
                 }`}
               >
-                <Text className="text-2xl">{item.emoji}</Text>
-                <Text className="text-white font-bold">{item.label}</Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-2xl">{item.emoji}</Text>
+                  <Text className="text-white font-bold">{item.label}</Text>
+                </View>
+                <Text className="text-slate-400 text-xs text-center">
+                  {item.desc}
+                </Text>
               </Pressable>
             ))}
           </View>
