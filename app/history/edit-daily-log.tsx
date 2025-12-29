@@ -1,4 +1,5 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { PHYSICAL_STATE_OPTIONS, WAKING_MOOD_OPTIONS } from "@/constants/data";
 import { supabase } from "@/lib/supabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -241,28 +242,26 @@ export default function EditDailyLogScreen() {
           <Text className="text-slate-400 mb-4 font-bold uppercase tracking-wider">
             Waking Mood
           </Text>
-          <View className="flex-row justify-between gap-2">
-            {["Groggy", "Neutral", "Refreshed", "Anxious", "Excited"].map(
-              (m) => (
-                <Pressable
-                  key={m}
-                  onPress={() => setMood(m)}
-                  className={`flex-1 p-3 rounded-xl items-center border ${
-                    mood === m
-                      ? "bg-blue-600 border-blue-400"
-                      : "bg-slate-800 border-slate-700"
-                  }`}
-                >
-                  <Text
-                    className={`text-xs font-bold ${
-                      mood === m ? "text-white" : "text-slate-400"
-                    }`}
-                  >
-                    {m}
-                  </Text>
-                </Pressable>
-              )
-            )}
+          <View className="flex-row flex-wrap gap-2">
+            {WAKING_MOOD_OPTIONS.map((item) => (
+              <Pressable
+                key={item.label}
+                onPress={() => setMood(item.label)}
+                className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
+                  mood === item.label
+                    ? "bg-blue-600 border-blue-600"
+                    : "bg-slate-800 border-slate-700"
+                }`}
+              >
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-2xl">{item.emoji}</Text>
+                  <Text className="text-white font-bold">{item.label}</Text>
+                </View>
+                <Text className="text-slate-400 text-xs text-center">
+                  {item.desc}
+                </Text>
+              </Pressable>
+            ))}
           </View>
         </View>
 
@@ -271,33 +270,19 @@ export default function EditDailyLogScreen() {
           <Text className="text-slate-400 mb-4 font-bold uppercase tracking-wider">
             Physical State
           </Text>
-          <View className="flex-row flex-wrap gap-2">
-            {[
-              "Soreness",
-              "Headache",
-              "Energetic",
-              "Sick",
-              "Hungry",
-              "Well-fed",
-            ].map((state) => (
+          <View className="flex-row flex-wrap gap-3">
+            {PHYSICAL_STATE_OPTIONS.map((item) => (
               <Pressable
-                key={state}
-                onPress={() => togglePhysicalState(state)}
-                className={`px-4 py-2 rounded-full border ${
-                  physicalStates.includes(state)
-                    ? "bg-emerald-900/50 border-emerald-500"
+                key={item.label}
+                onPress={() => togglePhysicalState(item.label)}
+                className={`p-3 rounded-xl border flex-row items-center gap-2 ${
+                  physicalStates.includes(item.label)
+                    ? "bg-blue-600 border-blue-600"
                     : "bg-slate-800 border-slate-700"
                 }`}
               >
-                <Text
-                  className={`${
-                    physicalStates.includes(state)
-                      ? "text-emerald-400"
-                      : "text-slate-400"
-                  }`}
-                >
-                  {state}
-                </Text>
+                <Text className="text-xl">{item.emoji}</Text>
+                <Text className="text-white font-bold">{item.label}</Text>
               </Pressable>
             ))}
           </View>

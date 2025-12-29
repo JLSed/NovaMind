@@ -1,5 +1,5 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { MOOD_OPTIONS } from "@/constants/data";
+import { MOOD_OPTIONS, PHYSICAL_STATE_OPTIONS } from "@/constants/data";
 import { generateSchedule } from "@/lib/gemini";
 import { supabase } from "@/lib/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -212,18 +212,7 @@ export default function ScheduleScreen() {
             Current Physical State (Select all that apply)
           </Text>
           <View className="flex-row flex-wrap gap-3">
-            {[
-              { label: "Fresh", emoji: "🌿" },
-              { label: "Groggy", emoji: "😵‍💫" },
-              { label: "Sleep Deprived", emoji: "😴" },
-              { label: "Caffeinated", emoji: "☕" },
-              { label: "Medicated", emoji: "💊" },
-              { label: "Food Coma", emoji: "🍱" },
-              { label: "Fasted", emoji: "🍽️" },
-              { label: "Headache", emoji: "🤕" },
-              { label: "Sick", emoji: "🤒" },
-              { label: "Sore", emoji: "🏋️" },
-            ].map((item) => (
+            {PHYSICAL_STATE_OPTIONS.map((item) => (
               <Pressable
                 key={item.label}
                 onPress={() => {

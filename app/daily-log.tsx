@@ -1,5 +1,5 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { MOOD_OPTIONS } from "@/constants/data";
+import { PHYSICAL_STATE_OPTIONS, WAKING_MOOD_OPTIONS } from "@/constants/data";
 import { supabase } from "@/lib/supabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
@@ -262,7 +262,7 @@ export default function DailyLogScreen() {
             How did you wake up feeling?
           </Text>
           <View className="flex-row flex-wrap gap-2 mb-4">
-            {MOOD_OPTIONS.map((item) => (
+            {WAKING_MOOD_OPTIONS.map((item) => (
               <Pressable
                 key={item.label}
                 onPress={() => setMood(item.label)}
@@ -287,18 +287,7 @@ export default function DailyLogScreen() {
             Physical State (Select all that apply)
           </Text>
           <View className="flex-row flex-wrap gap-3">
-            {[
-              { label: "Fresh", emoji: "🌿" },
-              { label: "Groggy", emoji: "😵‍💫" },
-              { label: "Sleep Deprived", emoji: "😴" },
-              { label: "Caffeinated", emoji: "☕" },
-              { label: "Medicated", emoji: "💊" },
-              { label: "Food Coma", emoji: "🍱" },
-              { label: "Fasted", emoji: "🍽️" },
-              { label: "Headache", emoji: "🤕" },
-              { label: "Sick", emoji: "🤒" },
-              { label: "Sore", emoji: "🏋️" },
-            ].map((item) => (
+            {PHYSICAL_STATE_OPTIONS.map((item) => (
               <Pressable
                 key={item.label}
                 onPress={() => {

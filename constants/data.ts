@@ -9,6 +9,34 @@ export const MOOD_OPTIONS = [
   { label: "Neutral", emoji: "😐", desc: "Just normal" },
 ];
 
+export const WAKING_MOOD_OPTIONS = [
+  { label: "Refreshed", emoji: "🌅", desc: "Ready to take on the day" },
+  { label: "Groggy", emoji: "😵‍💫", desc: "Slow to wake up" },
+  { label: "Tired", emoji: "😴", desc: "Didn't sleep enough" },
+  { label: "Anxious", emoji: "😰", desc: "Worried about the day" },
+  { label: "Excited", emoji: "🤩", desc: "Looking forward to it" },
+  { label: "Neutral", emoji: "😐", desc: "Just a normal morning" },
+  { label: "Grumpy", emoji: "😠", desc: "Woke up on wrong side of bed" },
+  { label: "Rushed", emoji: "🏃", desc: "Running late / Overslept" },
+];
+
+export const PHYSICAL_STATE_OPTIONS = [
+  { label: "Energetic", emoji: "⚡" },
+  { label: "Fatigued", emoji: "🥱" },
+  { label: "Sore", emoji: "🏋️" },
+  { label: "Tense", emoji: "😬" },
+  { label: "Relaxed", emoji: "😌" },
+  { label: "Hungry", emoji: "🤤" },
+  { label: "Stuffed", emoji: "🍱" },
+  { label: "Hydrated", emoji: "💧" },
+  { label: "Dehydrated", emoji: "🌵" },
+  { label: "Headache", emoji: "🤕" },
+  { label: "Nauseous", emoji: "🤢" },
+  { label: "Jittery", emoji: "🫨" },
+  { label: "Sick", emoji: "🤒" },
+  { label: "Groggy", emoji: "😵‍💫" },
+];
+
 export const TAG_CATEGORIES = [
   {
     title: "Fuel (Intake & Biology)",
