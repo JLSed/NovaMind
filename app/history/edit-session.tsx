@@ -91,6 +91,38 @@ export default function EditSessionScreen() {
   // Pickers
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [activeBreakPicker, setActiveBreakPicker] = useState<{
+    index: number;
+    field: "break_start" | "break_end";
+  } | null>(null);
+
+  // Helper: Parse time string relative to session date
+  const parseTimeStr = (timeStr: string) => {
+    if (!timeStr) return null;
+    const datePrefix = date as string;
+    const cleanTime = timeStr.replace(/[\u202F\u00A0]/g, " ").trim();
+
+    // Try standard parsing
+    let d = new Date(`${datePrefix} ${cleanTime}`);
+    if (!isNaN(d.getTime())) return d;
+
+    // Fallback regex
+    const match = cleanTime.match(/(\d+):(\d+)(?::(\d+))?\s*(AM|PM)?/i);
+    if (match) {
+      let [_, hStr, mStr, sStr, period] = match;
+      let h = parseInt(hStr);
+      const m = parseInt(mStr);
+      const s = sStr ? parseInt(sStr) : 0;
+      if (period) {
+        const p = period.toUpperCase();
+        if (p === "PM" && h < 12) h += 12;
+        if (p === "AM" && h === 12) h = 0;
+      }
+      const [year, month, day] = datePrefix.split("-").map(Number);
+      return new Date(year, month - 1, day, h, m, s);
+    }
+    return null;
+  };
 
   useEffect(() => {
     fetchSessionData();
@@ -119,42 +151,10 @@ export default function EditSessionScreen() {
         setJobCategory(session.job_category || "");
 
         // Parse Times
-        const datePrefix = date as string;
         let parsedStartTime = new Date();
 
-        const parseTimeStr = (dateStr: string, timeStr: string) => {
-          if (!timeStr) return null;
-          // Clean invisible characters (like narrow non-breaking space)
-          const cleanTime = timeStr.replace(/[\u202F\u00A0]/g, " ").trim();
-
-          // Try standard parsing
-          let d = new Date(`${dateStr} ${cleanTime}`);
-          if (!isNaN(d.getTime())) return d;
-
-          // Fallback: Manual Parse
-          // Matches 8:24:36 AM or 8:24 AM or 08:24:36
-          const match = cleanTime.match(/(\d+):(\d+)(?::(\d+))?\s*(AM|PM)?/i);
-          if (match) {
-            let [_, hStr, mStr, sStr, period] = match;
-            let h = parseInt(hStr);
-            const m = parseInt(mStr);
-            const s = sStr ? parseInt(sStr) : 0;
-
-            if (period) {
-              const p = period.toUpperCase();
-              if (p === "PM" && h < 12) h += 12;
-              if (p === "AM" && h === 12) h = 0;
-            }
-
-            const [year, month, day] = dateStr.split("-").map(Number);
-            // Note: month is 0-indexed in Date constructor
-            return new Date(year, month - 1, day, h, m, s);
-          }
-          return null;
-        };
-
         if (session.pre_session?.start_time) {
-          const d = parseTimeStr(datePrefix, session.pre_session.start_time);
+          const d = parseTimeStr(session.pre_session.start_time);
           if (d) {
             setStartTime(d);
             parsedStartTime = d;
@@ -164,7 +164,7 @@ export default function EditSessionScreen() {
         if (session.post_session) {
           let endTimeSet = false;
           if (session.post_session.end_time) {
-            const d = parseTimeStr(datePrefix, session.post_session.end_time);
+            const d = parseTimeStr(session.post_session.end_time);
             if (d) {
               setEndTime(d);
               endTimeSet = true;
@@ -232,35 +232,11 @@ export default function EditSessionScreen() {
     if (!breaksList || breaksList.length === 0) return 0;
 
     let totalMinutes = 0;
-    const datePrefix = date as string;
-
-    const parseTimeStr = (dateStr: string, timeStr: string) => {
-      if (!timeStr) return null;
-      const cleanTime = timeStr.replace(/[\u202F\u00A0]/g, " ").trim();
-      let d = new Date(`${dateStr} ${cleanTime}`);
-      if (!isNaN(d.getTime())) return d;
-
-      const match = cleanTime.match(/(\d+):(\d+)(?::(\d+))?\s*(AM|PM)?/i);
-      if (match) {
-        let [_, hStr, mStr, sStr, period] = match;
-        let h = parseInt(hStr);
-        const m = parseInt(mStr);
-        const s = sStr ? parseInt(sStr) : 0;
-        if (period) {
-          const p = period.toUpperCase();
-          if (p === "PM" && h < 12) h += 12;
-          if (p === "AM" && h === 12) h = 0;
-        }
-        const [year, month, day] = dateStr.split("-").map(Number);
-        return new Date(year, month - 1, day, h, m, s);
-      }
-      return null;
-    };
 
     breaksList.forEach((brk) => {
       if (brk.break_start && brk.break_end) {
-        const start = parseTimeStr(datePrefix, brk.break_start);
-        const end = parseTimeStr(datePrefix, brk.break_end);
+        const start = parseTimeStr(brk.break_start);
+        const end = parseTimeStr(brk.break_end);
 
         if (start && end) {
           let diffMs = end.getTime() - start.getTime();
@@ -274,6 +250,42 @@ export default function EditSessionScreen() {
   };
 
   const handleSave = async () => {
+    // Validation
+    for (let i = 0; i < breaks.length; i++) {
+      const brk = breaks[i];
+      const bStart = parseTimeStr(brk.break_start);
+      const bEnd = parseTimeStr(brk.break_end);
+
+      if (!bStart || !bEnd) {
+        Alert.alert("Error", `Invalid time format in Break #${i + 1}`);
+        return;
+      }
+
+      if (bStart < startTime) {
+        Alert.alert(
+          "Invalid Break Time",
+          `Break #${i + 1} starts before the session starts.`
+        );
+        return;
+      }
+
+      if (bEnd > endTime) {
+        Alert.alert(
+          "Invalid Break Time",
+          `Break #${i + 1} ends after the session ends.`
+        );
+        return;
+      }
+
+      if (bStart >= bEnd) {
+        Alert.alert(
+          "Invalid Break Time",
+          `Break #${i + 1} end time must be after start time.`
+        );
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       const {
@@ -567,25 +579,61 @@ export default function EditSessionScreen() {
               <View className="flex-row gap-2 mb-2">
                 <View className="flex-1">
                   <Text className="text-slate-500 text-xs mb-1">Start</Text>
-                  <TextInput
-                    className="bg-slate-900 text-white p-2 rounded-lg border border-slate-700"
-                    value={brk.break_start}
-                    onChangeText={(text) =>
-                      updateBreak(idx, "break_start", text)
+                  <Pressable
+                    onPress={() =>
+                      setActiveBreakPicker({ index: idx, field: "break_start" })
                     }
-                    placeholder="Start Time"
-                    placeholderTextColor="#64748b"
-                  />
+                    className="bg-slate-900 p-2 rounded-lg border border-slate-700"
+                  >
+                    <Text className="text-white">{brk.break_start}</Text>
+                  </Pressable>
+                  {activeBreakPicker?.index === idx &&
+                    activeBreakPicker?.field === "break_start" && (
+                      <DateTimePicker
+                        value={parseTimeStr(brk.break_start) || new Date()}
+                        mode="time"
+                        display="default"
+                        onChange={(e, d) => {
+                          setActiveBreakPicker(null);
+                          if (d) {
+                            updateBreak(
+                              idx,
+                              "break_start",
+                              d.toLocaleTimeString()
+                            );
+                          }
+                        }}
+                      />
+                    )}
                 </View>
                 <View className="flex-1">
                   <Text className="text-slate-500 text-xs mb-1">End</Text>
-                  <TextInput
-                    className="bg-slate-900 text-white p-2 rounded-lg border border-slate-700"
-                    value={brk.break_end}
-                    onChangeText={(text) => updateBreak(idx, "break_end", text)}
-                    placeholder="End Time"
-                    placeholderTextColor="#64748b"
-                  />
+                  <Pressable
+                    onPress={() =>
+                      setActiveBreakPicker({ index: idx, field: "break_end" })
+                    }
+                    className="bg-slate-900 p-2 rounded-lg border border-slate-700"
+                  >
+                    <Text className="text-white">{brk.break_end}</Text>
+                  </Pressable>
+                  {activeBreakPicker?.index === idx &&
+                    activeBreakPicker?.field === "break_end" && (
+                      <DateTimePicker
+                        value={parseTimeStr(brk.break_end) || new Date()}
+                        mode="time"
+                        display="default"
+                        onChange={(e, d) => {
+                          setActiveBreakPicker(null);
+                          if (d) {
+                            updateBreak(
+                              idx,
+                              "break_end",
+                              d.toLocaleTimeString()
+                            );
+                          }
+                        }}
+                      />
+                    )}
                 </View>
               </View>
 
