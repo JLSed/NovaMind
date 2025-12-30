@@ -130,9 +130,10 @@ export default function DailyLogScreen() {
       const today = getLocalYYYYMMDD();
 
       // If editing, we need to preserve existing sessions
-      let logDataToSave = {
+      let logDataToSave: any = {
         daily_bio_metrics: dailyBioMetrics,
         sessions: [],
+        break_sessions: [],
       };
 
       const { data: existingLog } = await supabase
@@ -144,6 +145,8 @@ export default function DailyLogScreen() {
 
       if (existingLog) {
         logDataToSave.sessions = existingLog.log_data.sessions || [];
+        logDataToSave.break_sessions =
+          existingLog.log_data.break_sessions || [];
       }
 
       const { error: saveError } = await supabase
