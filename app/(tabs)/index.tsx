@@ -43,14 +43,7 @@ export default function ScheduleScreen() {
     return `${year}-${month}-${day}`;
   };
 
-  // Check for morning log on focus
-  useFocusEffect(
-    useCallback(() => {
-      checkMorningLog();
-    }, [])
-  );
-
-  const checkMorningLog = async () => {
+  const checkMorningLog = useCallback(async () => {
     try {
       // Load saved schedule
       const savedDataString = await AsyncStorage.getItem(SCHEDULE_STORAGE_KEY);
@@ -95,7 +88,14 @@ export default function ScheduleScreen() {
     } catch (err) {
       console.error("Unexpected error fetching log:", err);
     }
-  };
+  }, [router]);
+
+  // Check for morning log on focus
+  useFocusEffect(
+    useCallback(() => {
+      checkMorningLog();
+    }, [checkMorningLog])
+  );
 
   const handleGenerateSchedule = async () => {
     if (!currentMood) {

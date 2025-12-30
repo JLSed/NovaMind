@@ -71,3 +71,10 @@
 -- create a list of function, constant, or component that might be reusable or extendable then read the list to check if the requested prompt can use components in this list.
 -- when adding constant data options, always add them to the constants/data.ts file
 -- when dealing with icons make sure they are mapped correctly to SF symbols and materials icon in the components/ui/icon-symbol.tsx file
+-- if you encounter a prompt that requires significant changes to the data structure, architecture, or core logic of the app, notify the user and get approval before proceeding.
+-- if you encounter an unused import, variable, function, or component in the codebase, remove it to keep the code clean and efficient.
+-- make sure to check if the code you are adding or modifying does not produce any TypeScript errors or warnings.
+-- before finishing your response check if there are any errors or warnings in the code you provided and fix them.
+-- when creating a new screen or component, ensure it follows the existing design patterns and coding conventions used throughout the project.
+-- always ensure that any new code you write is compatible with both Android and iOS platforms, considering any platform-specific nuances.
+-- ui components should be designed to be as reusable as possible and be placed in the components/ui directory.

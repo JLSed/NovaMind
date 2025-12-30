@@ -3,7 +3,7 @@ import { MOOD_OPTIONS, TAG_CATEGORIES } from "@/constants/data";
 import { supabase } from "@/lib/supabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -50,38 +50,37 @@ export default function EditSessionScreen() {
   } | null>(null);
 
   // Helper: Parse time string relative to session date
-  const parseTimeStr = (timeStr: string) => {
-    if (!timeStr) return null;
-    const datePrefix = date as string;
-    const cleanTime = timeStr.replace(/[\u202F\u00A0]/g, " ").trim();
+  const parseTimeStr = useCallback(
+    (timeStr: string) => {
+      if (!timeStr) return null;
+      const datePrefix = date as string;
+      const cleanTime = timeStr.replace(/[\u202F\u00A0]/g, " ").trim();
 
-    // Try standard parsing
-    let d = new Date(`${datePrefix} ${cleanTime}`);
-    if (!isNaN(d.getTime())) return d;
+      // Try standard parsing
+      let d = new Date(`${datePrefix} ${cleanTime}`);
+      if (!isNaN(d.getTime())) return d;
 
-    // Fallback regex
-    const match = cleanTime.match(/(\d+):(\d+)(?::(\d+))?\s*(AM|PM)?/i);
-    if (match) {
-      let [_, hStr, mStr, sStr, period] = match;
-      let h = parseInt(hStr);
-      const m = parseInt(mStr);
-      const s = sStr ? parseInt(sStr) : 0;
-      if (period) {
-        const p = period.toUpperCase();
-        if (p === "PM" && h < 12) h += 12;
-        if (p === "AM" && h === 12) h = 0;
+      // Fallback regex
+      const match = cleanTime.match(/(\d+):(\d+)(?::(\d+))?\s*(AM|PM)?/i);
+      if (match) {
+        let [, hStr, mStr, sStr, period] = match;
+        let h = parseInt(hStr);
+        const m = parseInt(mStr);
+        const s = sStr ? parseInt(sStr) : 0;
+        if (period) {
+          const p = period.toUpperCase();
+          if (p === "PM" && h < 12) h += 12;
+          if (p === "AM" && h === 12) h = 0;
+        }
+        const [year, month, day] = datePrefix.split("-").map(Number);
+        return new Date(year, month - 1, day, h, m, s);
       }
-      const [year, month, day] = datePrefix.split("-").map(Number);
-      return new Date(year, month - 1, day, h, m, s);
-    }
-    return null;
-  };
+      return null;
+    },
+    [date]
+  );
 
-  useEffect(() => {
-    fetchSessionData();
-  }, [date, index]);
-
-  const fetchSessionData = async () => {
+  const fetchSessionData = useCallback(async () => {
     try {
       const {
         data: { user },
@@ -149,7 +148,11 @@ export default function EditSessionScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [date, sessionIndex, parseTimeStr]);
+
+  useEffect(() => {
+    fetchSessionData();
+  }, [fetchSessionData]);
 
   const toggleTag = (tag: string) => {
     if (contextTags.includes(tag)) {

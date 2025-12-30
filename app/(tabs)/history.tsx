@@ -84,15 +84,8 @@ const MONTH_NAMES = [
 export default function HistoryScreen() {
   const [groupedLogs, setGroupedLogs] = useState<YearGroup[]>([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchLogs();
-    }, [])
-  );
-
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("productivity_logs")
@@ -109,7 +102,13 @@ export default function HistoryScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchLogs();
+    }, [fetchLogs])
+  );
 
   const groupLogs = (logs: LogEntry[]): YearGroup[] => {
     const groups: YearGroup[] = [];

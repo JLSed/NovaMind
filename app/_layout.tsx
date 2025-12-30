@@ -57,7 +57,7 @@ export default function RootLayout() {
       // Redirect to login if not logged in and trying to access protected routes
       router.replace("/login");
     }
-  }, [session, initialized, segments]);
+  }, [session, initialized, segments, router]);
 
   if (!initialized) {
     return (

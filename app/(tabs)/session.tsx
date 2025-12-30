@@ -36,7 +36,6 @@ export default function SessionScreen() {
   const [subjectiveMood, setSubjectiveMood] = useState("");
   const [energyLevel, setEnergyLevel] = useState("5");
   const [contextTags, setContextTags] = useState<string[]>([]);
-  const [customTag, setCustomTag] = useState("");
 
   // Pre-Session State (Break)
   const [breakTrigger, setBreakTrigger] = useState("");
@@ -76,7 +75,6 @@ export default function SessionScreen() {
     setSubjectiveMood("");
     setEnergyLevel("5");
     setContextTags([]);
-    setCustomTag("");
     setBreakTrigger("");
     setBreakIntent("");
     setPlannedDuration("15");
@@ -100,9 +98,7 @@ export default function SessionScreen() {
   }, []);
 
   // Load session on mount
-  useEffect(() => {
-    loadCurrentSession();
-  }, []);
+  // Moved to after loadCurrentSession definition
 
   // Save session on change
   const saveCurrentSession = useCallback(async () => {
@@ -174,7 +170,7 @@ export default function SessionScreen() {
     }
   }, [isLoaded, phase, saveCurrentSession]);
 
-  const loadCurrentSession = async () => {
+  const loadCurrentSession = useCallback(async () => {
     try {
       const jsonValue = await AsyncStorage.getItem(CURRENT_SESSION_KEY);
       if (jsonValue != null) {
@@ -216,7 +212,12 @@ export default function SessionScreen() {
     } finally {
       setIsLoaded(true);
     }
-  };
+  }, []);
+
+  // Load session on mount
+  useEffect(() => {
+    loadCurrentSession();
+  }, [loadCurrentSession]);
 
   const clearCurrentSession = async () => {
     try {
@@ -278,14 +279,6 @@ export default function SessionScreen() {
       setContextTags(contextTags.filter((t) => t !== tag));
     } else {
       setContextTags([...contextTags, tag]);
-    }
-  };
-
-  const toggleBreakTag = (tag: string) => {
-    if (breakContextTags.includes(tag)) {
-      setBreakContextTags(breakContextTags.filter((t) => t !== tag));
-    } else {
-      setBreakContextTags([...breakContextTags, tag]);
     }
   };
 

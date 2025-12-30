@@ -24,13 +24,7 @@ export default function HistoryDetailScreen() {
   const [logData, setLogData] = useState<any>(null);
   const [allSessions, setAllSessions] = useState<any[]>([]);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (date) fetchLog();
-    }, [date])
-  );
-
-  const fetchLog = async () => {
+  const fetchLog = useCallback(async () => {
     try {
       const {
         data: { user },
@@ -73,7 +67,7 @@ export default function HistoryDetailScreen() {
             const match = timeStr.match(/(\d+):(\d+)(?::(\d+))?\s*(AM|PM)?/i);
             if (!match) return 0;
 
-            let [_, hStr, mStr, sStr, period] = match;
+            let [, hStr, mStr, , period] = match;
             let h = parseInt(hStr);
             const m = parseInt(mStr);
 
@@ -99,7 +93,13 @@ export default function HistoryDetailScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [date]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (date) fetchLog();
+    }, [date, fetchLog])
+  );
 
   const handleDeleteSession = (session: any) => {
     const isWork = session.type === "work";
@@ -166,7 +166,7 @@ export default function HistoryDetailScreen() {
                 );
                 if (!match) return 0;
 
-                let [_, hStr, mStr, sStr, period] = match;
+                let [, hStr, mStr, , period] = match;
                 let h = parseInt(hStr);
                 const m = parseInt(mStr);
 
@@ -206,7 +206,7 @@ export default function HistoryDetailScreen() {
     // Check if the time string already contains AM/PM (12-hour format)
     const amPmMatch = timeStr.match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)/i);
     if (amPmMatch) {
-      const [_, h, m, ampm] = amPmMatch;
+      const [, h, m, ampm] = amPmMatch;
       return `${h}:${m} ${ampm.toUpperCase()}`;
     }
 

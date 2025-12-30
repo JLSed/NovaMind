@@ -3,7 +3,7 @@ import { PHYSICAL_STATE_OPTIONS, WAKING_MOOD_OPTIONS } from "@/constants/data";
 import { supabase } from "@/lib/supabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -31,11 +31,7 @@ export default function EditDailyLogScreen() {
   const [showWaketimePicker, setShowWaketimePicker] = useState(false);
   const [fullLogData, setFullLogData] = useState<any>(null);
 
-  useEffect(() => {
-    if (date) fetchLog();
-  }, [date]);
-
-  const fetchLog = async () => {
+  const fetchLog = useCallback(async () => {
     try {
       const {
         data: { user },
@@ -76,7 +72,11 @@ export default function EditDailyLogScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [date]);
+
+  useEffect(() => {
+    if (date) fetchLog();
+  }, [date, fetchLog]);
 
   const calculateSleepDuration = () => {
     let diffMs = waketime.getTime() - bedtime.getTime();

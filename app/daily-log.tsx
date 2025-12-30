@@ -3,7 +3,7 @@ import { PHYSICAL_STATE_OPTIONS, WAKING_MOOD_OPTIONS } from "@/constants/data";
 import { supabase } from "@/lib/supabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +13,15 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+// Helper to get local date string YYYY-MM-DD
+const getLocalYYYYMMDD = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 export default function DailyLogScreen() {
   const router = useRouter();
@@ -33,21 +42,7 @@ export default function DailyLogScreen() {
   const [showWaketimePicker, setShowWaketimePicker] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Helper to get local date string YYYY-MM-DD
-  const getLocalYYYYMMDD = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
-  // Fetch today's log on mount
-  useEffect(() => {
-    fetchTodayLog();
-  }, []);
-
-  const fetchTodayLog = async () => {
+  const fetchTodayLog = useCallback(async () => {
     try {
       const {
         data: { user },
@@ -89,7 +84,12 @@ export default function DailyLogScreen() {
     } catch (err) {
       console.error("Unexpected error fetching log:", err);
     }
-  };
+  }, []);
+
+  // Fetch today's log on mount
+  useEffect(() => {
+    fetchTodayLog();
+  }, [fetchTodayLog]);
 
   const calculateSleepDuration = () => {
     let diffMs = waketime.getTime() - bedtime.getTime();
