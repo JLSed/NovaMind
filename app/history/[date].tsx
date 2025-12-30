@@ -218,6 +218,62 @@ export default function HistoryDetailScreen() {
     return `${h12}:${minutes} ${ampm}`;
   };
 
+  const getEndTime = (session: any) => {
+    if (session.post_session?.end_time) {
+      return formatTime(session.post_session.end_time);
+    }
+
+    const startTimeStr = session.pre_session?.start_time;
+    if (!startTimeStr) return "";
+
+    let duration = 0;
+    if (session.type === "work") {
+      duration =
+        session.post_session?.total_duration_minutes ||
+        session.post_session?.net_focus_minutes ||
+        0;
+    } else {
+      duration = session.post_session?.total_duration_minutes || 0;
+    }
+
+    if (!duration) return "";
+
+    // Parse start time
+    const match = startTimeStr.match(/(\d+):(\d+)(?::(\d+))?\s*(AM|PM)?/i);
+    if (!match) return "";
+
+    let [, hStr, mStr, , period] = match;
+    let h = parseInt(hStr);
+    let m = parseInt(mStr);
+
+    if (period) {
+      const p = period.toUpperCase();
+      if (p === "PM" && h < 12) h += 12;
+      if (p === "AM" && h === 12) h = 0;
+    }
+
+    const totalMinutes = h * 60 + m + duration;
+    const endH = Math.floor(totalMinutes / 60) % 24;
+    const endM = totalMinutes % 60;
+
+    const ampm = endH >= 12 ? "PM" : "AM";
+    const h12 = endH % 12 || 12;
+    const mStrFormatted = endM.toString().padStart(2, "0");
+
+    return `${h12}:${mStrFormatted} ${ampm}`;
+  };
+
+  const getDuration = (session: any) => {
+    if (session.type === "work") {
+      return (
+        session.post_session?.total_duration_minutes ||
+        session.post_session?.net_focus_minutes ||
+        0
+      );
+    }
+    return session.post_session?.total_duration_minutes || 0;
+  };
+
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-slate-900 justify-center items-center">
@@ -328,9 +384,21 @@ export default function HistoryDetailScreen() {
             return (
               <View key={index} className="flex-row">
                 {/* Left Column: Time */}
-                <View className="w-20 items-end pr-4 pt-4">
+                <View className="w-20 items-end pr-4 pt-4 pb-8 justify-between">
                   <Text className="text-slate-400 font-bold text-xs">
                     {formatTime(session.pre_session.start_time)}
+                  </Text>
+
+                  <View className="flex-1 items-end justify-center py-1">
+                    <View className="w-px flex-1 bg-slate-800 mr-3" />
+                    <Text className="text-slate-600 text-[10px] font-medium my-0.5">
+                      {getDuration(session)}m
+                    </Text>
+                    <View className="w-px flex-1 bg-slate-800 mr-3" />
+                  </View>
+
+                  <Text className="text-slate-500 font-medium text-[10px]">
+                    {getEndTime(session)}
                   </Text>
                 </View>
 

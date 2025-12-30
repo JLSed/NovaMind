@@ -102,10 +102,19 @@ export default function EditDailyLogScreen() {
       } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Fetch latest data to ensure we don't overwrite sessions/breaks added in the meantime
+      const { data: latestLog, error: fetchError } = await supabase
+        .from("productivity_logs")
+        .select("log_data")
+        .eq("id", fullLogData.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       const sleepDuration = calculateSleepDuration();
 
       const updatedLogData = {
-        ...fullLogData.log_data,
+        ...latestLog.log_data, // Use latest data from DB
         daily_bio_metrics: {
           sleep_bedtime: bedtime.toISOString(),
           sleep_waketime: waketime.toISOString(),
