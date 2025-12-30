@@ -1,50 +1,68 @@
-# Welcome to your Expo app 👋
+# NovaMind 🧠
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**NovaMind** is a personal productivity application built on the principles of **Chronobiology** and **Energy Management**. Unlike traditional habit trackers that rely solely on how you _feel_, NovaMind compares your subjective mood with your actual output to identify your true biological peak performance windows.
 
-## Get started
+## 🚀 Core Philosophy
 
-1. Install dependencies
+**Output > Mood**
 
-   ```bash
-   npm install
-   ```
+We often feel "unmotivated" but perform well, or feel "excited" but get distracted. NovaMind bridges this "Accuracy Gap" by logging both:
 
-2. Start the app
+1.  **Pre-Work Prediction**: How you feel, what you slept, and your context (caffeine, environment).
+2.  **Post-Work Reality**: Your actual output, focus duration, and distraction level.
 
-   ```bash
-   npx expo start
-   ```
+By analyzing the discrepancy between these two, the AI learns your unique patterns (e.g., "You perform best on Logical tasks at 10 AM if you slept >7 hours, regardless of feeling groggy").
 
-In the output, you'll find options to open the app in a
+## ✨ Key Features
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- **Bio-Metric Logging**: Track sleep duration, wake time, and waking condition to understand your biological baseline.
+- **Session Tracking**:
+  - **Pre-Session**: Log mood, context tags (e.g., `caffeine`, `quiet_environment`), and intended task type.
+  - **Post-Session**: Rate output (High/Med/Low), calculate net focus time (minus breaks), and log distractions.
+- **AI Coach (Gemini 1.5 Flash)**:
+  - Uses **Context Injection** to analyze your last 30 days of logs.
+  - Predicts your daily energy curve.
+  - Suggests the best time for Deep Work vs. Admin tasks.
+  - Identifies "Crash Zones" to avoid burnout.
+- **Data-Driven Insights**: Discover patterns like "Caffeine helps me recover from <6 hours sleep" or "I crash at 2 PM on days I skip breakfast."
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 🛠 Tech Stack
 
-## Get a fresh project
+- **Framework**: [Expo](https://expo.dev) (React Native)
+- **Language**: TypeScript
+- **Styling**: [NativeWind](https://www.nativewind.dev/) (Tailwind CSS)
+- **Backend/DB**: [Supabase](https://supabase.com) (PostgreSQL + Auth)
+- **AI Engine**: Google Gemini 1.5 Flash (via Google Generative AI SDK)
 
-When you're ready, run:
+## 🏃‍♂️ Getting Started
 
-```bash
-npm run reset-project
-```
+1.  **Install Dependencies**
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+    ```bash
+    npm install
+    ```
 
-## Learn more
+2.  **Environment Setup**
+    Create a `.env` file with your Supabase and Gemini API keys:
 
-To learn more about developing your project with Expo, look at the following resources:
+    ```env
+    EXPO_PUBLIC_SUPABASE_URL=your_url
+    EXPO_PUBLIC_SUPABASE_ANON_KEY=your_key
+    EXPO_PUBLIC_GEMINI_API_KEY=your_key
+    ```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+3.  **Start the App**
+    ```bash
+    npx expo start
+    ```
 
-## Join the community
+## 📂 Project Structure
 
-Join our community of developers creating universal apps.
+- `app/`: File-based routing (Expo Router).
+- `components/`: Reusable UI components (NativeWind).
+- `lib/`: Service integrations (Supabase, Gemini).
+- `constants/`: App-wide constants and theme settings.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 🤝 Contributing
+
+This is a personal project focused on self-optimization. Suggestions for new metrics or AI prompt improvements are welcome!
