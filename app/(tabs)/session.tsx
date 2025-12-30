@@ -8,6 +8,7 @@ import {
 } from "@/constants/data";
 import { supabase } from "@/lib/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -40,11 +41,12 @@ export default function SessionScreen() {
   // Pre-Session State (Break)
   const [breakTrigger, setBreakTrigger] = useState("");
   const [breakIntent, setBreakIntent] = useState("");
-  const [plannedDuration, setPlannedDuration] = useState("15");
+  const [plannedDuration, setPlannedDuration] = useState(15);
   const [breakContextTags, setBreakContextTags] = useState<string[]>([]);
 
   // Active Session State
   const [startTime, setStartTime] = useState<number | null>(null);
+
   const [isOnBreak, setIsOnBreak] = useState(false);
   const [breakStartTime, setBreakStartTime] = useState<number | null>(null);
   const [accumulatedBreakTime, setAccumulatedBreakTime] = useState(0);
@@ -62,13 +64,18 @@ export default function SessionScreen() {
   const [guiltRating, setGuiltRating] = useState("None");
   const [recoveryRating, setRecoveryRating] = useState("Medium");
   const [readinessToReturn, setReadinessToReturn] = useState("5");
+  const [notificationId, setNotificationId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
   const timerRef = useRef<any>(null);
 
-  const resetState = useCallback(() => {
+  const resetState = useCallback(async () => {
+    if (notificationId) {
+      await Notifications.cancelScheduledNotificationAsync(notificationId);
+      setNotificationId(null);
+    }
     setPhase("idle");
     setSessionType("work");
     setJobCategory("");
@@ -77,7 +84,7 @@ export default function SessionScreen() {
     setContextTags([]);
     setBreakTrigger("");
     setBreakIntent("");
-    setPlannedDuration("15");
+    setPlannedDuration(15);
     setBreakContextTags([]);
     setStartTime(null);
     setIsOnBreak(false);
@@ -95,7 +102,7 @@ export default function SessionScreen() {
     setGuiltRating("None");
     setRecoveryRating("Medium");
     setReadinessToReturn("5");
-  }, []);
+  }, [notificationId]);
 
   // Load session on mount
   // Moved to after loadCurrentSession definition
@@ -128,6 +135,7 @@ export default function SessionScreen() {
         readinessToReturn,
         breaks,
         breakReason,
+        notificationId,
         savedAt: Date.now(),
       };
       await AsyncStorage.setItem(
@@ -162,6 +170,7 @@ export default function SessionScreen() {
     readinessToReturn,
     breaks,
     breakReason,
+    notificationId,
   ]);
 
   useEffect(() => {
@@ -184,7 +193,11 @@ export default function SessionScreen() {
         setContextTags(data.contextTags);
         setBreakTrigger(data.breakTrigger || "");
         setBreakIntent(data.breakIntent || "");
-        setPlannedDuration(data.plannedDuration || "15");
+        setPlannedDuration(
+          typeof data.plannedDuration === "string"
+            ? parseInt(data.plannedDuration)
+            : data.plannedDuration || 15
+        );
         setBreakContextTags(data.breakContextTags || []);
         setBreakActivities(data.breakActivities || []);
         setStartTime(data.startTime);
@@ -200,6 +213,7 @@ export default function SessionScreen() {
         setReadinessToReturn(data.readinessToReturn || "5");
         setBreaks(data.breaks || []);
         setBreakReason(data.breakReason || "");
+        setNotificationId(data.notificationId || null);
 
         // Recalculate elapsed time if active
         if (data.phase === "active" && data.startTime) {
@@ -290,7 +304,7 @@ export default function SessionScreen() {
     }
   };
 
-  const handleStartSession = () => {
+  const handleStartSession = async () => {
     if (sessionType === "work") {
       if (!jobCategory || !subjectiveMood) {
         Alert.alert(
@@ -303,6 +317,50 @@ export default function SessionScreen() {
       if (!breakTrigger || !breakIntent) {
         Alert.alert("Missing Info", "Please fill in the trigger and intent.");
         return;
+      }
+
+      // Schedule Notification for Break
+      const durationMinutes = plannedDuration;
+      if (durationMinutes > 0) {
+        // Trigger at 50% of the duration
+        const totalSeconds = durationMinutes * 60;
+        const triggerSeconds = Math.floor(totalSeconds * 0.5);
+
+        if (triggerSeconds > 0) {
+          try {
+            const { status } = await Notifications.getPermissionsAsync();
+            let finalStatus = status;
+            if (status !== "granted") {
+              const { status: newStatus } =
+                await Notifications.requestPermissionsAsync();
+              finalStatus = newStatus;
+            }
+
+            if (finalStatus === "granted") {
+              const triggerDate = new Date(Date.now() + triggerSeconds * 1000);
+              console.log(
+                `Scheduling notification for ${triggerDate.toLocaleTimeString()} (${triggerSeconds}s from now)`
+              );
+              const id = await Notifications.scheduleNotificationAsync({
+                content: {
+                  title: "Break Ending Soon",
+                  body: "Your break is almost over. Time to wrap up!",
+                  sound: true,
+                  color: "#0d9488",
+                  priority: Notifications.AndroidNotificationPriority.MAX,
+                },
+                trigger: {
+                  type: Notifications.SchedulableTriggerInputTypes.DATE,
+                  date: triggerDate,
+                  channelId: "default",
+                },
+              });
+              setNotificationId(id);
+            }
+          } catch (error) {
+            console.error("Error scheduling notification:", error);
+          }
+        }
       }
     }
 
@@ -356,7 +414,12 @@ export default function SessionScreen() {
     setShowBreakModal(false);
   };
 
-  const handleEndSession = () => {
+  const handleEndSession = async () => {
+    if (notificationId) {
+      await Notifications.cancelScheduledNotificationAsync(notificationId);
+      setNotificationId(null);
+    }
+
     const now = Date.now();
     console.log("Ending session at:", now);
     // If ending while on break, add the final partial break
@@ -505,7 +568,7 @@ export default function SessionScreen() {
               : "",
             subjective_mood: subjectiveMood,
             energy_level: parseInt(energyLevel),
-            planned_duration: parseInt(plannedDuration),
+            planned_duration: plannedDuration,
             context_tags: breakContextTags,
           },
           post_session: {
@@ -719,7 +782,7 @@ export default function SessionScreen() {
                     Planned Duration (min)
                   </Text>
                   <View className="flex-row justify-between bg-slate-900 p-2 rounded-xl border border-slate-800">
-                    {["5", "15", "30", "60"].map((duration) => (
+                    {[5, 15, 30, 60].map((duration) => (
                       <Pressable
                         key={duration}
                         onPress={() => setPlannedDuration(duration)}
