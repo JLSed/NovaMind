@@ -218,6 +218,15 @@ export default function HistoryDetailScreen() {
     return `${h12}:${minutes} ${ampm}`;
   };
 
+  const formatDuration = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
+
   const getEndTime = (session: any) => {
     if (session.post_session?.end_time) {
       return formatTime(session.post_session.end_time);
@@ -392,7 +401,7 @@ export default function HistoryDetailScreen() {
                   <View className="flex-1 items-end justify-center py-1">
                     <View className="w-px flex-1 bg-slate-800 mr-3" />
                     <Text className="text-slate-600 text-[10px] font-medium my-0.5">
-                      {getDuration(session)}m
+                      {formatDuration(getDuration(session))}
                     </Text>
                     <View className="w-px flex-1 bg-slate-800 mr-3" />
                   </View>
@@ -498,7 +507,9 @@ export default function HistoryDetailScreen() {
                               Focus
                             </Text>
                             <Text className="text-white font-bold">
-                              {session.post_session?.net_focus_minutes || 0} m
+                              {formatDuration(
+                                session.post_session?.net_focus_minutes || 0
+                              )}
                             </Text>
                           </View>
                         </View>
@@ -542,9 +553,10 @@ export default function HistoryDetailScreen() {
                               Duration
                             </Text>
                             <Text className="text-white font-bold">
-                              {session.post_session?.total_duration_minutes ||
-                                0}{" "}
-                              m
+                              {formatDuration(
+                                session.post_session?.total_duration_minutes ||
+                                  0
+                              )}
                             </Text>
                           </View>
                         </View>

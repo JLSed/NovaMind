@@ -271,6 +271,15 @@ function LogCard({ log }: { log: LogEntry }) {
     ? [bio.physical_state]
     : [];
 
+  const formatDuration = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
+
   return (
     <Pressable
       onPress={() =>
@@ -286,11 +295,11 @@ function LogCard({ log }: { log: LogEntry }) {
         <View className="flex-row items-center gap-2">
           <View className="items-end">
             <Text className="text-blue-400 font-bold">
-              {totalFocus} min focus
+              {formatDuration(totalFocus)} focus
             </Text>
             {totalBreak > 0 && (
               <Text className="text-teal-400 font-bold text-xs">
-                {totalBreak} min break
+                {formatDuration(totalBreak)} break
               </Text>
             )}
           </View>

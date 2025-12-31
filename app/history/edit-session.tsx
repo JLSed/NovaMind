@@ -214,6 +214,15 @@ export default function EditSessionScreen() {
     return Math.round(totalMinutes);
   };
 
+  const formatDuration = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
+
   const handleSave = async () => {
     // Validation
     for (let i = 0; i < breaks.length; i++) {
@@ -428,7 +437,7 @@ export default function EditSessionScreen() {
             </Text>
             <View className="bg-slate-700 p-3 rounded-lg">
               <Text className="text-white text-center font-bold">
-                {calculateTotalBreakMinutes(breaks)} min
+                {formatDuration(calculateTotalBreakMinutes(breaks))}
               </Text>
             </View>
           </View>
