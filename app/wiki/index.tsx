@@ -38,40 +38,43 @@ const WikiScreen = () => {
             </Pressable>
           </Link>
 
-          {/* Placeholders */}
-          <Pressable className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex-row items-center justify-between opacity-50">
-            <View className="flex-row items-center gap-4">
-              <View className="bg-purple-900/50 p-3 rounded-full">
-                <IconSymbol name="face.smiling" size={24} color="#c084fc" />
+          <Link href="/wiki/mood-energy" asChild>
+            <Pressable className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex-row items-center justify-between active:bg-slate-700">
+              <View className="flex-row items-center gap-4">
+                <View className="bg-purple-900/50 p-3 rounded-full">
+                  <IconSymbol name="face.smiling" size={24} color="#c084fc" />
+                </View>
+                <View>
+                  <Text className="text-white font-bold text-lg">
+                    Mood & Energy
+                  </Text>
+                  <Text className="text-slate-400">
+                    Understanding your biological state
+                  </Text>
+                </View>
               </View>
-              <View>
-                <Text className="text-white font-bold text-lg">
-                  Mood & Energy
-                </Text>
-                <Text className="text-slate-400">
-                  Understanding your biological state
-                </Text>
-              </View>
-            </View>
-            <Text className="text-slate-500 text-xs">Coming Soon</Text>
-          </Pressable>
+              <IconSymbol name="chevron.right" size={20} color="#64748b" />
+            </Pressable>
+          </Link>
 
-          <Pressable className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex-row items-center justify-between opacity-50">
-            <View className="flex-row items-center gap-4">
-              <View className="bg-emerald-900/50 p-3 rounded-full">
-                <IconSymbol name="gear" size={24} color="#34d399" />
+          <Link href="/wiki/how-it-works" asChild>
+            <Pressable className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex-row items-center justify-between active:bg-slate-700">
+              <View className="flex-row items-center gap-4">
+                <View className="bg-emerald-900/50 p-3 rounded-full">
+                  <IconSymbol name="gear" size={24} color="#34d399" />
+                </View>
+                <View>
+                  <Text className="text-white font-bold text-lg">
+                    How it Works
+                  </Text>
+                  <Text className="text-slate-400">
+                    The science behind the schedule
+                  </Text>
+                </View>
               </View>
-              <View>
-                <Text className="text-white font-bold text-lg">
-                  How it Works
-                </Text>
-                <Text className="text-slate-400">
-                  The science behind the schedule
-                </Text>
-              </View>
-            </View>
-            <Text className="text-slate-500 text-xs">Coming Soon</Text>
-          </Pressable>
+              <IconSymbol name="chevron.right" size={20} color="#64748b" />
+            </Pressable>
+          </Link>
         </View>
       </ScrollView>
     </SafeAreaView>

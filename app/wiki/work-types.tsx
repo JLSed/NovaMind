@@ -1,4 +1,4 @@
-import { ScrollView, View } from "react-native";
+import { ScrollView } from "react-native";
 import Markdown from "react-native-markdown-display";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -83,7 +83,7 @@ const WorkTypesScreen = () => {
       className="flex-1 bg-slate-900"
       edges={["bottom", "left", "right"]}
     >
-      <ScrollView className="p-4">
+      <ScrollView contentContainerClassName="p-4 pb-20">
         <Markdown
           style={{
             body: { color: "#e2e8f0", fontSize: 16, lineHeight: 24 },
@@ -119,11 +119,23 @@ const WorkTypesScreen = () => {
             td: { padding: 10, color: "#e2e8f0" },
             bullet_list: { marginBottom: 10 },
             list_item: { marginBottom: 5 },
+            blockquote: {
+              backgroundColor: "#1e293b",
+              borderColor: "#334155",
+              borderLeftWidth: 4,
+              padding: 10,
+              color: "#e2e8f0",
+            },
+            code_inline: {
+              backgroundColor: "#1e293b",
+              color: "#e2e8f0",
+              borderRadius: 4,
+              paddingHorizontal: 4,
+            },
           }}
         >
           {content}
         </Markdown>
-        <View className="h-10" />
       </ScrollView>
     </SafeAreaView>
   );

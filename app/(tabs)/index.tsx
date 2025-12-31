@@ -278,6 +278,19 @@ export default function ScheduleScreen() {
                   marginBottom: 10,
                 },
                 strong: { color: "#60a5fa", fontWeight: "bold" },
+                blockquote: {
+                  backgroundColor: "#1e293b",
+                  borderColor: "#334155",
+                  borderLeftWidth: 4,
+                  padding: 10,
+                  color: "#e2e8f0",
+                },
+                code_inline: {
+                  backgroundColor: "#1e293b",
+                  color: "#e2e8f0",
+                  borderRadius: 4,
+                  paddingHorizontal: 4,
+                },
               }}
             >
               {advice}
