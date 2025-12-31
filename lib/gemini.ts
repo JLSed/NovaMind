@@ -42,19 +42,18 @@ You will receive three data blocks:
 - **Break Advice:** If the user recently had a High Guilt break, suggest a "Low Dopamine" reset (e.g., Walking, Meditation) for the next break.
 
 ### OUTPUT FORMAT
-Return your response in this Markdown format:
-
-## 📊 Daily Prediction
-[One sentence summary of how today looks based on data, e.g., "Caution: Your history shows high distraction risk when you sleep under 6 hours."]
-
-## 🕒 Recommended Flow
-(Do NOT use tables. Use a bulleted list format for mobile readability)
-- **[Time Range]**: [Task Type] (Reason: [Data-backed reason, e.g., "You usually hit peak focus 2 hours after waking."])
-- **[Time Range]**: [Task Type]
-- **[Time Range]**: BREAK (Reason: "Projected energy crash")
-
-## 💡 Insight
-[A specific pattern you found in the logs, e.g., "I noticed your readiness to return to work is lowest after gaming breaks. Try reading instead."]
+Return your response in this JSON format (do not wrap in markdown code blocks):
+{
+  "dailyPrediction": "One sentence summary of how today looks based on data.",
+  "recommendedFlow": [
+    {
+      "timeRange": "HH:MM - HH:MM",
+      "taskType": "Task Name",
+      "reason": "Data-backed reason"
+    }
+  ],
+  "insight": "A specific pattern you found in the logs."
+}
 `;
 
 export async function generateSchedule(

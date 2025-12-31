@@ -54,6 +54,7 @@ export const BREAK_ACTIVITIES = [
   "Walk",
   "Gaming",
   "TV/Series",
+  "Youtube Videos",
   "Reading",
   "Eating",
   "Chore",

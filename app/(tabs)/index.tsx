@@ -32,7 +32,7 @@ export default function ScheduleScreen() {
 
   // UI State
   const [loading, setLoading] = useState(false);
-  const [advice, setAdvice] = useState("");
+  const [scheduleData, setScheduleData] = useState<any>(null);
 
   // Helper to get local date string YYYY-MM-DD
   const getLocalYYYYMMDD = () => {
@@ -52,7 +52,7 @@ export default function ScheduleScreen() {
           const savedData = JSON.parse(savedDataString);
           // Only restore if it's from today
           if (savedData.date === getLocalYYYYMMDD()) {
-            setAdvice(savedData.schedule);
+            setScheduleData(savedData.schedule);
           }
         } catch (e) {
           // If parsing fails, ignore or handle legacy format
@@ -110,7 +110,7 @@ export default function ScheduleScreen() {
     }
 
     setLoading(true);
-    setAdvice("");
+    setScheduleData(null);
 
     try {
       const {
@@ -141,12 +141,25 @@ export default function ScheduleScreen() {
         currentStatus
       );
 
-      setAdvice(aiResponse);
+      let parsedData;
+      try {
+        const cleanJson = aiResponse
+          .replace(/```json/g, "")
+          .replace(/```/g, "")
+          .trim();
+        parsedData = JSON.parse(cleanJson);
+      } catch (e) {
+        console.error("Failed to parse AI JSON", e);
+        Alert.alert("Error", "Failed to parse AI response. Please try again.");
+        return;
+      }
+
+      setScheduleData(parsedData);
 
       // Save with date to ensure freshness
       const dataToSave = {
         date: getLocalYYYYMMDD(),
-        schedule: aiResponse,
+        schedule: parsedData,
       };
       await AsyncStorage.setItem(
         SCHEDULE_STORAGE_KEY,
@@ -258,43 +271,75 @@ export default function ScheduleScreen() {
         </Pressable>
 
         {/* AI Response Display */}
-        {advice ? (
-          <View className="mt-8 bg-slate-800 p-4 rounded-xl border border-slate-700">
+        {scheduleData ? (
+          <View className="mt-8">
             <Text className="text-blue-400 font-bold text-xl mb-4">
               Your AI Plan
             </Text>
-            <Markdown
-              style={{
-                body: { color: "#e2e8f0", fontSize: 16 },
-                heading1: {
-                  color: "#ffffff",
-                  fontWeight: "bold",
-                  marginBottom: 10,
-                },
-                heading2: {
-                  color: "#93c5fd",
-                  fontWeight: "bold",
-                  marginTop: 20,
-                  marginBottom: 10,
-                },
-                strong: { color: "#60a5fa", fontWeight: "bold" },
-                blockquote: {
-                  backgroundColor: "#1e293b",
-                  borderColor: "#334155",
-                  borderLeftWidth: 4,
-                  padding: 10,
-                  color: "#e2e8f0",
-                },
-                code_inline: {
-                  backgroundColor: "#1e293b",
-                  color: "#e2e8f0",
-                  borderRadius: 4,
-                  paddingHorizontal: 4,
-                },
-              }}
-            >
-              {advice}
-            </Markdown>
+
+            {/* Recommended Flow - Timeline */}
+            <View className="mb-3">
+              <Text className="text-blue-300 font-bold text-lg mb-4">
+                🕒 Recommended Flow
+              </Text>
+              <View className="">
+                {scheduleData.recommendedFlow?.map(
+                  (item: any, index: number) => (
+                    <View key={index} className="flex-row mb-4">
+                      {/* Time Column */}
+                      <View className="border-r-2 border-slate-600 pr-3 pl-2 items-end pt-1">
+                        <Text className="text-slate-400 font-bold text-sm">
+                          {item.timeRange.split("-")[0].trim()}
+                        </Text>
+                        <Text className="text-slate-500 text-xs">
+                          {item.timeRange.split("-")[1]?.trim()}
+                        </Text>
+                      </View>
+
+                      {/* Content Column */}
+                      <View className="flex-1 pl-3 pb-2">
+                        <Text className="text-white font-bold text-lg">
+                          {item.taskType}
+                        </Text>
+                        <Text className="text-slate-400 text-base mt-1">
+                          {item.reason}
+                        </Text>
+                      </View>
+                    </View>
+                  )
+                )}
+              </View>
+            </View>
+
+            {/* Daily Prediction */}
+            <View className="mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
+              <Text className="text-blue-400 font-bold text-lg mb-2">
+                📊 Daily Prediction
+              </Text>
+              <Markdown
+                style={{
+                  body: { color: "#e2e8f0", fontSize: 16 },
+                  strong: { color: "#60a5fa", fontWeight: "bold" },
+                }}
+              >
+                {scheduleData.dailyPrediction || ""}
+              </Markdown>
+            </View>
+
+            {/* Insight */}
+            <View className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+              <Text className="text-yellow-400 font-bold text-lg mb-2">
+                💡 Insight
+              </Text>
+              <Markdown
+                style={{
+                  body: { color: "#e2e8f0", fontSize: 16 },
+                  strong: { color: "#60a5fa", fontWeight: "bold" },
+                }}
+              >
+                {scheduleData.insight || ""}
+              </Markdown>
+            </View>
           </View>
         ) : null}
       </ScrollView>
