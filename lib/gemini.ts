@@ -59,7 +59,8 @@ Return your response in this JSON format (do not wrap in markdown code blocks):
 export async function generateSchedule(
   historyLogs: any[],
   dailyBioMetrics: any,
-  currentStatus: any
+  currentStatus: any,
+  userTasks?: string
 ) {
   try {
     const model = genAI.getGenerativeModel({
@@ -81,10 +82,14 @@ export async function generateSchedule(
       CURRENT_STATUS (Right Now):
       ${JSON.stringify(currentStatus)}
 
+      USER_TASKS (Tasks I want to do):
+      ${userTasks || "None specified"}
+
       HISTORY_LOGS: 
       ${JSON.stringify(historyLogs)}
       
       Please generate my schedule for today starting from ${currentTime}.
+      If USER_TASKS are provided, incorporate them into the schedule where they fit best based on my energy levels.
     `;
 
     const result = await model.generateContent(userMessage);

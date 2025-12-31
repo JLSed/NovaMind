@@ -11,6 +11,7 @@ import {
   Pressable,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import Markdown from "react-native-markdown-display";
@@ -26,6 +27,7 @@ export default function ScheduleScreen() {
   const [currentPhysicalStates, setCurrentPhysicalStates] = useState<string[]>(
     []
   );
+  const [userTasks, setUserTasks] = useState("");
 
   // Data from DB (Morning Log)
   const [morningLog, setMorningLog] = useState<any>(null);
@@ -138,7 +140,8 @@ export default function ScheduleScreen() {
       const aiResponse = await generateSchedule(
         historyLogs?.map((log) => log.log_data) || [],
         morningLog,
-        currentStatus
+        currentStatus,
+        userTasks
       );
 
       let parsedData;
@@ -251,6 +254,18 @@ export default function ScheduleScreen() {
               </Pressable>
             ))}
           </View>
+
+          <Text className="text-slate-400 mb-2 text-lg mt-4">
+            Tasks you want to do today (Optional)
+          </Text>
+          <TextInput
+            className="bg-slate-800 text-white p-4 rounded-xl border border-slate-700"
+            placeholder="e.g., Finish report, Gym, Read book..."
+            placeholderTextColor="#64748b"
+            value={userTasks}
+            onChangeText={setUserTasks}
+            multiline
+          />
         </View>
 
         {/* Submit Button */}
