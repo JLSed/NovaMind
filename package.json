@@ -1,7 +1,7 @@
 {
   "name": "novamind",
   "main": "expo-router/entry",
-  "version": "p-a1.4.1",
+  "version": "p-a1.4.2",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",

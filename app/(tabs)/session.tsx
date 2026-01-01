@@ -13,7 +13,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -617,579 +619,602 @@ export default function SessionScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-slate-950 p-4">
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        <Text className="text-white text-3xl font-bold mb-6">
-          Session Tracker
-        </Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+          <Text className="text-white text-3xl font-bold mb-6">
+            Session Tracker
+          </Text>
 
-        {phase === "idle" && (
-          <View className="items-center justify-center mt-10">
-            <Pressable
-              onPress={() => {
-                setSessionType("work");
-                setPhase("pre-session");
-              }}
-              className="bg-blue-600 w-full p-6 rounded-2xl items-center justify-center active:bg-blue-700 shadow-lg shadow-blue-900 mb-6"
-            >
-              <IconSymbol name="play.fill" size={40} color="white" />
-              <Text className="text-white text-xl font-bold mt-2">
-                Start Work Session
-              </Text>
-              <Text className="text-blue-200 text-sm mt-1">
-                Focus on a task
-              </Text>
-            </Pressable>
-
-            <Pressable
-              onPress={() => {
-                setSessionType("break");
-                setPhase("pre-session");
-              }}
-              className="bg-teal-600 w-full p-6 rounded-2xl items-center justify-center active:bg-teal-700 shadow-lg shadow-teal-900"
-            >
-              <IconSymbol name="cup.and.saucer.fill" size={40} color="white" />
-              <Text className="text-white text-xl font-bold mt-2">
-                Start Break Session
-              </Text>
-              <Text className="text-teal-200 text-sm mt-1">
-                Relax or recover
-              </Text>
-            </Pressable>
-
-            <Text className="text-slate-400 mt-10 text-center px-10">
-              Ready to focus? Or maybe just relax? Track your activity to
-              understand your patterns.
-            </Text>
-          </View>
-        )}
-
-        {phase === "pre-session" && (
-          <View>
-            <Text className="text-xl text-white font-semibold mb-4">
-              {sessionType === "work"
-                ? "Pre-Work Check-in"
-                : "Pre-Break Check-in"}
-            </Text>
-
-            {sessionType === "work" ? (
-              <>
-                <View className="mb-4">
-                  <Text className="text-slate-400 mb-2">
-                    What are you doing?
-                  </Text>
-                  <TextInput
-                    className="bg-slate-900 text-white p-4 rounded-xl text-lg border border-slate-800"
-                    placeholder="e.g. Coding, Reading, Gaming"
-                    placeholderTextColor="#64748b"
-                    value={jobCategory}
-                    onChangeText={setJobCategory}
-                  />
-                </View>
-              </>
-            ) : !breakIntent ? (
-              <View className="gap-4">
-                <Text className="text-slate-400 text-center mb-2">
-                  What do you need right now?
+          {phase === "idle" && (
+            <View className="items-center justify-center mt-10">
+              <Pressable
+                onPress={() => {
+                  setSessionType("work");
+                  setPhase("pre-session");
+                }}
+                className="bg-blue-600 w-full p-6 rounded-2xl items-center justify-center active:bg-blue-700 shadow-lg shadow-blue-900 mb-6"
+              >
+                <IconSymbol name="play.fill" size={40} color="white" />
+                <Text className="text-white text-xl font-bold mt-2">
+                  Start Work Session
                 </Text>
-                <Pressable
-                  onPress={() => setBreakIntent("Recovery")}
-                  className="bg-green-600/20 border border-green-600 p-8 rounded-2xl items-center active:bg-green-600/30"
-                >
-                  <Text className="text-4xl mb-2">🟢</Text>
-                  <Text className="text-green-400 text-2xl font-bold">
-                    Recharge
-                  </Text>
-                  <Text className="text-green-200/70 text-center mt-2">
-                    I am tired and need energy
-                  </Text>
-                </Pressable>
+                <Text className="text-blue-200 text-sm mt-1">
+                  Focus on a task
+                </Text>
+              </Pressable>
 
-                <Pressable
-                  onPress={() => setBreakIntent("Procrastination")}
-                  className="bg-red-600/20 border border-red-600 p-8 rounded-2xl items-center active:bg-red-600/30"
-                >
-                  <Text className="text-4xl mb-2">🔴</Text>
-                  <Text className="text-red-400 text-2xl font-bold">
-                    Escape
+              <Pressable
+                onPress={() => {
+                  setSessionType("break");
+                  setPhase("pre-session");
+                }}
+                className="bg-teal-600 w-full p-6 rounded-2xl items-center justify-center active:bg-teal-700 shadow-lg shadow-teal-900"
+              >
+                <IconSymbol
+                  name="cup.and.saucer.fill"
+                  size={40}
+                  color="white"
+                />
+                <Text className="text-white text-xl font-bold mt-2">
+                  Start Break Session
+                </Text>
+                <Text className="text-teal-200 text-sm mt-1">
+                  Relax or recover
+                </Text>
+              </Pressable>
+
+              <Text className="text-slate-400 mt-10 text-center px-10">
+                Ready to focus? Or maybe just relax? Track your activity to
+                understand your patterns.
+              </Text>
+            </View>
+          )}
+
+          {phase === "pre-session" && (
+            <View>
+              <Text className="text-xl text-white font-semibold mb-4">
+                {sessionType === "work"
+                  ? "Pre-Work Check-in"
+                  : "Pre-Break Check-in"}
+              </Text>
+
+              {sessionType === "work" ? (
+                <>
+                  <View className="mb-4">
+                    <Text className="text-slate-400 mb-2">
+                      What are you doing?
+                    </Text>
+                    <TextInput
+                      className="bg-slate-900 text-white p-4 rounded-xl text-lg border border-slate-800"
+                      placeholder="e.g. Coding, Reading, Gaming"
+                      placeholderTextColor="#64748b"
+                      value={jobCategory}
+                      onChangeText={setJobCategory}
+                    />
+                  </View>
+                </>
+              ) : !breakIntent ? (
+                <View className="gap-4">
+                  <Text className="text-slate-400 text-center mb-2">
+                    What do you need right now?
                   </Text>
-                  <Text className="text-red-200/70 text-center mt-2">
-                    I am bored/stuck and want to run away
-                  </Text>
-                </Pressable>
-              </View>
-            ) : (
-              <>
-                <View className="mb-4">
-                  <Text className="text-slate-400 mb-2">
-                    Trigger (Why now?)
-                  </Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    <View className="flex-row gap-2">
-                      {BREAK_TRIGGERS.map((trigger) => (
+                  <Pressable
+                    onPress={() => setBreakIntent("Recovery")}
+                    className="bg-green-600/20 border border-green-600 p-8 rounded-2xl items-center active:bg-green-600/30"
+                  >
+                    <Text className="text-4xl mb-2">🟢</Text>
+                    <Text className="text-green-400 text-2xl font-bold">
+                      Recharge
+                    </Text>
+                    <Text className="text-green-200/70 text-center mt-2">
+                      I am tired and need energy
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => setBreakIntent("Procrastination")}
+                    className="bg-red-600/20 border border-red-600 p-8 rounded-2xl items-center active:bg-red-600/30"
+                  >
+                    <Text className="text-4xl mb-2">🔴</Text>
+                    <Text className="text-red-400 text-2xl font-bold">
+                      Escape
+                    </Text>
+                    <Text className="text-red-200/70 text-center mt-2">
+                      I am bored/stuck and want to run away
+                    </Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <>
+                  <View className="mb-4">
+                    <Text className="text-slate-400 mb-2">
+                      Trigger (Why now?)
+                    </Text>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                    >
+                      <View className="flex-row gap-2">
+                        {BREAK_TRIGGERS.map((trigger) => (
+                          <Pressable
+                            key={trigger}
+                            onPress={() => setBreakTrigger(trigger)}
+                            className={`px-4 py-3 rounded-xl border ${
+                              breakTrigger === trigger
+                                ? "bg-teal-600 border-teal-600"
+                                : "bg-slate-900 border-slate-800"
+                            }`}
+                          >
+                            <Text
+                              className={`font-bold ${
+                                breakTrigger === trigger
+                                  ? "text-white"
+                                  : "text-slate-400"
+                              }`}
+                            >
+                              {trigger}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                    </ScrollView>
+                  </View>
+
+                  <View className="mb-4">
+                    <Text className="text-slate-400 mb-2">Intent (Goal)</Text>
+                    <View className="flex-row flex-wrap gap-2">
+                      {BREAK_INTENTS.map((intent) => (
                         <Pressable
-                          key={trigger}
-                          onPress={() => setBreakTrigger(trigger)}
-                          className={`px-4 py-3 rounded-xl border ${
-                            breakTrigger === trigger
+                          key={intent}
+                          onPress={() => setBreakIntent(intent)}
+                          className={`px-4 py-2 rounded-lg border ${
+                            breakIntent === intent
                               ? "bg-teal-600 border-teal-600"
                               : "bg-slate-900 border-slate-800"
                           }`}
                         >
                           <Text
-                            className={`font-bold ${
-                              breakTrigger === trigger
-                                ? "text-white"
+                            className={`text-sm ${
+                              breakIntent === intent
+                                ? "text-white font-bold"
                                 : "text-slate-400"
                             }`}
                           >
-                            {trigger}
+                            {intent}
                           </Text>
                         </Pressable>
                       ))}
                     </View>
-                  </ScrollView>
-                </View>
+                  </View>
 
-                <View className="mb-4">
-                  <Text className="text-slate-400 mb-2">Intent (Goal)</Text>
-                  <View className="flex-row flex-wrap gap-2">
-                    {BREAK_INTENTS.map((intent) => (
-                      <Pressable
-                        key={intent}
-                        onPress={() => setBreakIntent(intent)}
-                        className={`px-4 py-2 rounded-lg border ${
-                          breakIntent === intent
-                            ? "bg-teal-600 border-teal-600"
-                            : "bg-slate-900 border-slate-800"
-                        }`}
-                      >
-                        <Text
-                          className={`text-sm ${
-                            breakIntent === intent
-                              ? "text-white font-bold"
-                              : "text-slate-400"
+                  <View className="mb-4">
+                    <Text className="text-slate-400 mb-2">
+                      Planned Duration (min)
+                    </Text>
+                    <View className="flex-row justify-between bg-slate-900 p-2 rounded-xl border border-slate-800">
+                      {[5, 15, 30, 60].map((duration) => (
+                        <Pressable
+                          key={duration}
+                          onPress={() => setPlannedDuration(duration)}
+                          className={`p-3 rounded-lg ${
+                            plannedDuration === duration
+                              ? "bg-teal-600"
+                              : "bg-transparent"
                           }`}
                         >
-                          {intent}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-
-                <View className="mb-4">
-                  <Text className="text-slate-400 mb-2">
-                    Planned Duration (min)
-                  </Text>
-                  <View className="flex-row justify-between bg-slate-900 p-2 rounded-xl border border-slate-800">
-                    {[5, 15, 30, 60].map((duration) => (
-                      <Pressable
-                        key={duration}
-                        onPress={() => setPlannedDuration(duration)}
-                        className={`p-3 rounded-lg ${
-                          plannedDuration === duration
-                            ? "bg-teal-600"
-                            : "bg-transparent"
-                        }`}
-                      >
-                        <Text className="text-white font-bold">{duration}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-              </>
-            )}
-
-            {(sessionType === "work" || breakIntent) && (
-              <>
-                <View className="mb-4">
-                  <Text className="text-slate-400 mb-2">Current Mood</Text>
-                  <View className="flex-row flex-wrap gap-2">
-                    {MOOD_OPTIONS.map((item) => (
-                      <Pressable
-                        key={item.label}
-                        onPress={() => setSubjectiveMood(item.label)}
-                        className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
-                          subjectiveMood === item.label
-                            ? sessionType === "work"
-                              ? "bg-blue-600 border-blue-600"
-                              : "bg-teal-600 border-teal-600"
-                            : "bg-slate-900 border-slate-800"
-                        }`}
-                      >
-                        <View className="flex-row items-center gap-2">
-                          <Text className="text-2xl">{item.emoji}</Text>
                           <Text className="text-white font-bold">
-                            {item.label}
+                            {duration}
                           </Text>
-                        </View>
-                        <Text className="text-slate-400 text-xs text-center">
-                          {item.desc}
-                        </Text>
-                      </Pressable>
-                    ))}
+                        </Pressable>
+                      ))}
+                    </View>
                   </View>
-                </View>
+                </>
+              )}
 
-                <View className="mb-4">
-                  <Text className="text-slate-400 mb-2">
-                    Energy Level (1-10)
-                  </Text>
-                  <View className="flex-row justify-between bg-slate-900 p-2 rounded-xl border border-slate-800">
-                    {[1, 3, 5, 7, 9].map((level) => (
-                      <Pressable
-                        key={level}
-                        onPress={() => setEnergyLevel(level.toString())}
-                        className={`p-3 rounded-lg ${
-                          energyLevel === level.toString()
-                            ? sessionType === "work"
-                              ? "bg-blue-600"
-                              : "bg-teal-600"
-                            : "bg-transparent"
-                        }`}
-                      >
-                        <Text className="text-white font-bold">{level}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-              </>
-            )}
-
-            {sessionType === "work" && (
-              <View className="mb-6">
-                <Text className="text-slate-400 mb-4 text-lg font-semibold">
-                  Context Tags
-                </Text>
-                {TAG_CATEGORIES.map((category) => (
-                  <View key={category.title} className="mb-4">
-                    <Text className="text-slate-500 text-xs font-bold mb-2 uppercase tracking-wider">
-                      {category.title}
-                    </Text>
+              {(sessionType === "work" || breakIntent) && (
+                <>
+                  <View className="mb-4">
+                    <Text className="text-slate-400 mb-2">Current Mood</Text>
                     <View className="flex-row flex-wrap gap-2">
-                      {category.tags.map((tag) => (
+                      {MOOD_OPTIONS.map((item) => (
                         <Pressable
-                          key={tag}
-                          onPress={() => toggleTag(tag)}
-                          className={`px-3 py-2 rounded-lg border ${
-                            contextTags.includes(tag)
+                          key={item.label}
+                          onPress={() => setSubjectiveMood(item.label)}
+                          className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
+                            subjectiveMood === item.label
+                              ? sessionType === "work"
+                                ? "bg-blue-600 border-blue-600"
+                                : "bg-teal-600 border-teal-600"
+                              : "bg-slate-900 border-slate-800"
+                          }`}
+                        >
+                          <View className="flex-row items-center gap-2">
+                            <Text className="text-2xl">{item.emoji}</Text>
+                            <Text className="text-white font-bold">
+                              {item.label}
+                            </Text>
+                          </View>
+                          <Text className="text-slate-400 text-xs text-center">
+                            {item.desc}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
+
+                  <View className="mb-4">
+                    <Text className="text-slate-400 mb-2">
+                      Energy Level (1-10)
+                    </Text>
+                    <View className="flex-row justify-between bg-slate-900 p-2 rounded-xl border border-slate-800">
+                      {[1, 3, 5, 7, 9].map((level) => (
+                        <Pressable
+                          key={level}
+                          onPress={() => setEnergyLevel(level.toString())}
+                          className={`p-3 rounded-lg ${
+                            energyLevel === level.toString()
+                              ? sessionType === "work"
+                                ? "bg-blue-600"
+                                : "bg-teal-600"
+                              : "bg-transparent"
+                          }`}
+                        >
+                          <Text className="text-white font-bold">{level}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
+                </>
+              )}
+
+              {sessionType === "work" && (
+                <View className="mb-6">
+                  <Text className="text-slate-400 mb-4 text-lg font-semibold">
+                    Context Tags
+                  </Text>
+                  {TAG_CATEGORIES.map((category) => (
+                    <View key={category.title} className="mb-4">
+                      <Text className="text-slate-500 text-xs font-bold mb-2 uppercase tracking-wider">
+                        {category.title}
+                      </Text>
+                      <View className="flex-row flex-wrap gap-2">
+                        {category.tags.map((tag) => (
+                          <Pressable
+                            key={tag}
+                            onPress={() => toggleTag(tag)}
+                            className={`px-3 py-2 rounded-lg border ${
+                              contextTags.includes(tag)
+                                ? "bg-blue-600 border-blue-600"
+                                : "bg-slate-900 border-slate-700"
+                            }`}
+                          >
+                            <Text
+                              className={`text-sm ${
+                                contextTags.includes(tag)
+                                  ? "text-white font-bold"
+                                  : "text-slate-300"
+                              }`}
+                            >
+                              {tag}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {(sessionType === "work" || breakIntent) && (
+                <Pressable
+                  onPress={handleStartSession}
+                  className={`p-4 rounded-xl items-center active:opacity-90 mt-4 ${
+                    sessionType === "work" ? "bg-green-600" : "bg-teal-600"
+                  }`}
+                >
+                  <Text className="text-white font-bold text-lg">
+                    Start Timer
+                  </Text>
+                </Pressable>
+              )}
+
+              <Pressable
+                onPress={handleCancelSession}
+                className="p-4 rounded-xl items-center mt-2"
+              >
+                <Text className="text-slate-400">Cancel</Text>
+              </Pressable>
+            </View>
+          )}
+
+          {phase === "active" && (
+            <View className="items-center py-10">
+              <Text className="text-slate-400 text-lg mb-2">
+                {sessionType === "work"
+                  ? jobCategory
+                  : breakActivities.length > 0
+                  ? breakActivities.join(", ")
+                  : "Break Session"}
+              </Text>
+              <Text
+                className={`text-6xl font-mono font-bold mb-8 ${
+                  isOnBreak || sessionType === "break"
+                    ? "text-teal-500"
+                    : "text-white"
+                }`}
+              >
+                {formatTime(elapsedTime)}
+              </Text>
+
+              {isOnBreak && sessionType === "work" && (
+                <View className="bg-yellow-500/20 px-4 py-2 rounded-full mb-8">
+                  <Text className="text-yellow-500 font-bold">ON BREAK</Text>
+                </View>
+              )}
+
+              <View className="w-full flex-row gap-4 justify-center">
+                {sessionType === "work" && (
+                  <Pressable
+                    onPress={handleToggleBreak}
+                    className={`flex-1 p-4 rounded-xl items-center ${
+                      isOnBreak ? "bg-blue-600" : "bg-yellow-600"
+                    }`}
+                  >
+                    <Text className="text-white font-bold text-lg">
+                      {isOnBreak ? "Resume Work" : "Take Break"}
+                    </Text>
+                  </Pressable>
+                )}
+
+                <Pressable
+                  onPress={handleEndSession}
+                  className={`flex-1 bg-red-600 p-4 rounded-xl items-center ${
+                    sessionType === "break" ? "w-full" : ""
+                  }`}
+                >
+                  <Text className="text-white font-bold text-lg">Stop</Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
+
+          {phase === "post-session" && (
+            <View>
+              <Text className="text-xl text-white font-semibold mb-4">
+                {sessionType === "work" ? "Session Summary" : "Break Summary"}
+              </Text>
+
+              <View className="bg-slate-900 p-4 rounded-xl mb-6 border border-slate-800">
+                <View className="flex-row justify-between mb-2">
+                  <Text className="text-slate-400">Total Time</Text>
+                  <Text className="text-white font-bold">
+                    {Math.round(
+                      (startTime ? Date.now() - startTime : 0) / 60000
+                    )}{" "}
+                    min
+                  </Text>
+                </View>
+                {sessionType === "work" && (
+                  <>
+                    <View className="flex-row justify-between mb-2">
+                      <Text className="text-slate-400">Break Time</Text>
+                      <Text className="text-white font-bold">
+                        {Math.round(accumulatedBreakTime / 60000)} min
+                      </Text>
+                    </View>
+                    <View className="h-[1px] bg-slate-700 my-2" />
+                    <View className="flex-row justify-between">
+                      <Text className="text-green-400 font-bold">
+                        Net Focus
+                      </Text>
+                      <Text className="text-green-400 font-bold">
+                        {Math.round(
+                          ((startTime ? Date.now() - startTime : 0) -
+                            accumulatedBreakTime) /
+                            60000
+                        )}{" "}
+                        min
+                      </Text>
+                    </View>
+                  </>
+                )}
+              </View>
+
+              {sessionType === "work" ? (
+                <>
+                  <View className="mb-4">
+                    <Text className="text-slate-400 mb-2">Output Rating</Text>
+                    <View className="flex-row gap-2">
+                      {["Low", "Medium", "High"].map((rating) => (
+                        <Pressable
+                          key={rating}
+                          onPress={() => setOutputRating(rating)}
+                          className={`flex-1 p-3 rounded-lg items-center border ${
+                            outputRating === rating
                               ? "bg-blue-600 border-blue-600"
                               : "bg-slate-900 border-slate-700"
                           }`}
                         >
-                          <Text
-                            className={`text-sm ${
-                              contextTags.includes(tag)
-                                ? "text-white font-bold"
-                                : "text-slate-300"
-                            }`}
-                          >
-                            {tag}
-                          </Text>
+                          <Text className="text-white font-bold">{rating}</Text>
                         </Pressable>
                       ))}
                     </View>
                   </View>
-                ))}
-              </View>
-            )}
 
-            {(sessionType === "work" || breakIntent) && (
-              <Pressable
-                onPress={handleStartSession}
-                className={`p-4 rounded-xl items-center active:opacity-90 mt-4 ${
-                  sessionType === "work" ? "bg-green-600" : "bg-teal-600"
-                }`}
-              >
-                <Text className="text-white font-bold text-lg">
-                  Start Timer
-                </Text>
-              </Pressable>
-            )}
-
-            <Pressable
-              onPress={handleCancelSession}
-              className="p-4 rounded-xl items-center mt-2"
-            >
-              <Text className="text-slate-400">Cancel</Text>
-            </Pressable>
-          </View>
-        )}
-
-        {phase === "active" && (
-          <View className="items-center py-10">
-            <Text className="text-slate-400 text-lg mb-2">
-              {sessionType === "work"
-                ? jobCategory
-                : breakActivities.length > 0
-                ? breakActivities.join(", ")
-                : "Break Session"}
-            </Text>
-            <Text
-              className={`text-6xl font-mono font-bold mb-8 ${
-                isOnBreak || sessionType === "break"
-                  ? "text-teal-500"
-                  : "text-white"
-              }`}
-            >
-              {formatTime(elapsedTime)}
-            </Text>
-
-            {isOnBreak && sessionType === "work" && (
-              <View className="bg-yellow-500/20 px-4 py-2 rounded-full mb-8">
-                <Text className="text-yellow-500 font-bold">ON BREAK</Text>
-              </View>
-            )}
-
-            <View className="w-full flex-row gap-4 justify-center">
-              {sessionType === "work" && (
-                <Pressable
-                  onPress={handleToggleBreak}
-                  className={`flex-1 p-4 rounded-xl items-center ${
-                    isOnBreak ? "bg-blue-600" : "bg-yellow-600"
-                  }`}
-                >
-                  <Text className="text-white font-bold text-lg">
-                    {isOnBreak ? "Resume Work" : "Take Break"}
-                  </Text>
-                </Pressable>
-              )}
-
-              <Pressable
-                onPress={handleEndSession}
-                className={`flex-1 bg-red-600 p-4 rounded-xl items-center ${
-                  sessionType === "break" ? "w-full" : ""
-                }`}
-              >
-                <Text className="text-white font-bold text-lg">Stop</Text>
-              </Pressable>
-            </View>
-          </View>
-        )}
-
-        {phase === "post-session" && (
-          <View>
-            <Text className="text-xl text-white font-semibold mb-4">
-              {sessionType === "work" ? "Session Summary" : "Break Summary"}
-            </Text>
-
-            <View className="bg-slate-900 p-4 rounded-xl mb-6 border border-slate-800">
-              <View className="flex-row justify-between mb-2">
-                <Text className="text-slate-400">Total Time</Text>
-                <Text className="text-white font-bold">
-                  {Math.round((startTime ? Date.now() - startTime : 0) / 60000)}{" "}
-                  min
-                </Text>
-              </View>
-              {sessionType === "work" && (
-                <>
-                  <View className="flex-row justify-between mb-2">
-                    <Text className="text-slate-400">Break Time</Text>
-                    <Text className="text-white font-bold">
-                      {Math.round(accumulatedBreakTime / 60000)} min
-                    </Text>
-                  </View>
-                  <View className="h-[1px] bg-slate-700 my-2" />
-                  <View className="flex-row justify-between">
-                    <Text className="text-green-400 font-bold">Net Focus</Text>
-                    <Text className="text-green-400 font-bold">
-                      {Math.round(
-                        ((startTime ? Date.now() - startTime : 0) -
-                          accumulatedBreakTime) /
-                          60000
-                      )}{" "}
-                      min
-                    </Text>
-                  </View>
-                </>
-              )}
-            </View>
-
-            {sessionType === "work" ? (
-              <>
-                <View className="mb-4">
-                  <Text className="text-slate-400 mb-2">Output Rating</Text>
-                  <View className="flex-row gap-2">
-                    {["Low", "Medium", "High"].map((rating) => (
-                      <Pressable
-                        key={rating}
-                        onPress={() => setOutputRating(rating)}
-                        className={`flex-1 p-3 rounded-lg items-center border ${
-                          outputRating === rating
-                            ? "bg-blue-600 border-blue-600"
-                            : "bg-slate-900 border-slate-700"
-                        }`}
-                      >
-                        <Text className="text-white font-bold">{rating}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-
-                <View className="mb-4">
-                  <Text className="text-slate-400 mb-2">End Mood</Text>
-                  <View className="flex-row flex-wrap gap-2">
-                    {MOOD_OPTIONS.map((item) => (
-                      <Pressable
-                        key={item.label}
-                        onPress={() => setEndMood(item.label)}
-                        className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
-                          endMood === item.label
-                            ? "bg-blue-600 border-blue-600"
-                            : "bg-slate-900 border-slate-800"
-                        }`}
-                      >
-                        <View className="flex-row items-center gap-2">
-                          <Text className="text-2xl">{item.emoji}</Text>
-                          <Text className="text-white font-bold">
-                            {item.label}
-                          </Text>
-                        </View>
-                        <Text className="text-slate-400 text-xs text-center">
-                          {item.desc}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-
-                <View className="mb-4">
-                  <Text className="text-slate-400 mb-2">Distraction Level</Text>
-                  <View className="flex-row gap-2">
-                    {["None", "Low", "Medium", "High"].map((level) => (
-                      <Pressable
-                        key={level}
-                        onPress={() => setDistractionLevel(level)}
-                        className={`flex-1 p-3 rounded-lg items-center border ${
-                          distractionLevel === level
-                            ? "bg-purple-600 border-purple-600"
-                            : "bg-slate-900 border-slate-700"
-                        }`}
-                      >
-                        <Text className="text-white font-bold">{level}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-              </>
-            ) : (
-              <>
-                <View className="mb-4">
-                  <Text className="text-slate-400 mb-2">
-                    Activities (Select all that apply)
-                  </Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    <View className="flex-row gap-2">
-                      {BREAK_ACTIVITIES.map((activity) => (
+                  <View className="mb-4">
+                    <Text className="text-slate-400 mb-2">End Mood</Text>
+                    <View className="flex-row flex-wrap gap-2">
+                      {MOOD_OPTIONS.map((item) => (
                         <Pressable
-                          key={activity}
-                          onPress={() => toggleBreakActivity(activity)}
-                          className={`px-4 py-2 rounded-lg border ${
-                            breakActivities.includes(activity)
-                              ? "bg-teal-600 border-teal-600"
+                          key={item.label}
+                          onPress={() => setEndMood(item.label)}
+                          className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
+                            endMood === item.label
+                              ? "bg-blue-600 border-blue-600"
                               : "bg-slate-900 border-slate-800"
                           }`}
                         >
-                          <Text
-                            className={`text-sm ${
-                              breakActivities.includes(activity)
-                                ? "text-white font-bold"
-                                : "text-slate-400"
-                            }`}
-                          >
-                            {activity}
+                          <View className="flex-row items-center gap-2">
+                            <Text className="text-2xl">{item.emoji}</Text>
+                            <Text className="text-white font-bold">
+                              {item.label}
+                            </Text>
+                          </View>
+                          <Text className="text-slate-400 text-xs text-center">
+                            {item.desc}
                           </Text>
                         </Pressable>
                       ))}
                     </View>
-                  </ScrollView>
-                </View>
-
-                <View className="mb-4">
-                  <Text className="text-slate-400 mb-2">Guilt Rating</Text>
-                  <View className="flex-row gap-2">
-                    {["None", "Low", "Medium", "High"].map((rating) => (
-                      <Pressable
-                        key={rating}
-                        onPress={() => setGuiltRating(rating)}
-                        className={`flex-1 p-3 rounded-lg items-center border ${
-                          guiltRating === rating
-                            ? "bg-teal-600 border-teal-600"
-                            : "bg-slate-900 border-slate-700"
-                        }`}
-                      >
-                        <Text className="text-white font-bold">{rating}</Text>
-                      </Pressable>
-                    ))}
                   </View>
-                </View>
 
-                <View className="mb-4">
-                  <Text className="text-slate-400 mb-2">Recovery Rating</Text>
-                  <View className="flex-row gap-2">
-                    {["Low", "Medium", "High"].map((rating) => (
-                      <Pressable
-                        key={rating}
-                        onPress={() => setRecoveryRating(rating)}
-                        className={`flex-1 p-3 rounded-lg items-center border ${
-                          recoveryRating === rating
-                            ? "bg-teal-600 border-teal-600"
-                            : "bg-slate-900 border-slate-700"
-                        }`}
-                      >
-                        <Text className="text-white font-bold">{rating}</Text>
-                      </Pressable>
-                    ))}
+                  <View className="mb-4">
+                    <Text className="text-slate-400 mb-2">
+                      Distraction Level
+                    </Text>
+                    <View className="flex-row gap-2">
+                      {["None", "Low", "Medium", "High"].map((level) => (
+                        <Pressable
+                          key={level}
+                          onPress={() => setDistractionLevel(level)}
+                          className={`flex-1 p-3 rounded-lg items-center border ${
+                            distractionLevel === level
+                              ? "bg-purple-600 border-purple-600"
+                              : "bg-slate-900 border-slate-700"
+                          }`}
+                        >
+                          <Text className="text-white font-bold">{level}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
                   </View>
-                </View>
-              </>
-            )}
-
-            <View className="mb-6">
-              <Text className="text-slate-400 mb-2">Notes</Text>
-              <TextInput
-                className="bg-slate-900 text-white p-4 rounded-xl text-lg border border-slate-800 h-24"
-                placeholder="Any thoughts?"
-                placeholderTextColor="#64748b"
-                multiline
-                textAlignVertical="top"
-                value={userNotes}
-                onChangeText={setUserNotes}
-              />
-            </View>
-
-            <Pressable
-              onPress={handleSaveSession}
-              disabled={loading}
-              className={`p-4 rounded-xl items-center ${
-                loading
-                  ? "bg-slate-800"
-                  : sessionType === "work"
-                  ? "bg-blue-600 active:bg-blue-700"
-                  : "bg-teal-600 active:bg-teal-700"
-              }`}
-            >
-              {loading ? (
-                <ActivityIndicator color="white" />
+                </>
               ) : (
-                <Text className="text-white font-bold text-lg">
-                  Save Session
-                </Text>
-              )}
-            </Pressable>
+                <>
+                  <View className="mb-4">
+                    <Text className="text-slate-400 mb-2">
+                      Activities (Select all that apply)
+                    </Text>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                    >
+                      <View className="flex-row gap-2">
+                        {BREAK_ACTIVITIES.map((activity) => (
+                          <Pressable
+                            key={activity}
+                            onPress={() => toggleBreakActivity(activity)}
+                            className={`px-4 py-2 rounded-lg border ${
+                              breakActivities.includes(activity)
+                                ? "bg-teal-600 border-teal-600"
+                                : "bg-slate-900 border-slate-800"
+                            }`}
+                          >
+                            <Text
+                              className={`text-sm ${
+                                breakActivities.includes(activity)
+                                  ? "text-white font-bold"
+                                  : "text-slate-400"
+                              }`}
+                            >
+                              {activity}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                    </ScrollView>
+                  </View>
 
-            <Pressable
-              onPress={handleDiscardSession}
-              disabled={loading}
-              className="p-4 rounded-xl items-center mt-4"
-            >
-              <Text className="text-red-500 font-bold text-lg">
-                Discard Session
-              </Text>
-            </Pressable>
-          </View>
-        )}
-      </ScrollView>
+                  <View className="mb-4">
+                    <Text className="text-slate-400 mb-2">Guilt Rating</Text>
+                    <View className="flex-row gap-2">
+                      {["None", "Low", "Medium", "High"].map((rating) => (
+                        <Pressable
+                          key={rating}
+                          onPress={() => setGuiltRating(rating)}
+                          className={`flex-1 p-3 rounded-lg items-center border ${
+                            guiltRating === rating
+                              ? "bg-teal-600 border-teal-600"
+                              : "bg-slate-900 border-slate-700"
+                          }`}
+                        >
+                          <Text className="text-white font-bold">{rating}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
+
+                  <View className="mb-4">
+                    <Text className="text-slate-400 mb-2">Recovery Rating</Text>
+                    <View className="flex-row gap-2">
+                      {["Low", "Medium", "High"].map((rating) => (
+                        <Pressable
+                          key={rating}
+                          onPress={() => setRecoveryRating(rating)}
+                          className={`flex-1 p-3 rounded-lg items-center border ${
+                            recoveryRating === rating
+                              ? "bg-teal-600 border-teal-600"
+                              : "bg-slate-900 border-slate-700"
+                          }`}
+                        >
+                          <Text className="text-white font-bold">{rating}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
+                </>
+              )}
+
+              <View className="mb-6">
+                <Text className="text-slate-400 mb-2">Notes</Text>
+                <TextInput
+                  className="bg-slate-900 text-white p-4 rounded-xl text-lg border border-slate-800 h-24"
+                  placeholder="Any thoughts?"
+                  placeholderTextColor="#64748b"
+                  multiline
+                  textAlignVertical="top"
+                  value={userNotes}
+                  onChangeText={setUserNotes}
+                />
+              </View>
+
+              <Pressable
+                onPress={handleSaveSession}
+                disabled={loading}
+                className={`p-4 rounded-xl items-center ${
+                  loading
+                    ? "bg-slate-800"
+                    : sessionType === "work"
+                    ? "bg-blue-600 active:bg-blue-700"
+                    : "bg-teal-600 active:bg-teal-700"
+                }`}
+              >
+                {loading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text className="text-white font-bold text-lg">
+                    Save Session
+                  </Text>
+                )}
+              </Pressable>
+
+              <Pressable
+                onPress={handleDiscardSession}
+                disabled={loading}
+                className="p-4 rounded-xl items-center mt-4"
+              >
+                <Text className="text-red-500 font-bold text-lg">
+                  Discard Session
+                </Text>
+              </Pressable>
+            </View>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <Modal
         visible={showBreakModal}

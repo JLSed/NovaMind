@@ -7,6 +7,8 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -360,344 +362,358 @@ export default function EditSessionScreen() {
         </Pressable>
       </View>
 
-      <ScrollView contentContainerClassName="p-4 pb-20">
-        {/* Job Category */}
-        <View className="mb-6">
-          <Text className="text-slate-400 mb-2 font-bold">Job Category</Text>
-          <TextInput
-            className="bg-slate-800 text-white p-4 rounded-xl text-lg border border-slate-700"
-            value={jobCategory}
-            onChangeText={setJobCategory}
-            placeholder="e.g. Coding"
-            placeholderTextColor="#64748b"
-          />
-        </View>
-
-        {/* Time Section */}
-        <View className="mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
-          <Text className="text-slate-400 mb-4 font-bold">Time & Duration</Text>
-
-          <View className="flex-row justify-between mb-4">
-            <View className="flex-1 mr-2">
-              <Text className="text-slate-500 mb-1">Start Time</Text>
-              <Pressable
-                onPress={() => setShowStartTimePicker(true)}
-                className="bg-slate-700 p-3 rounded-lg"
-              >
-                <Text className="text-white text-center">
-                  {startTime.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </Text>
-              </Pressable>
-              {showStartTimePicker && (
-                <DateTimePicker
-                  value={startTime}
-                  mode="time"
-                  display="default"
-                  onChange={(e, d) => {
-                    setShowStartTimePicker(false);
-                    if (d) setStartTime(d);
-                  }}
-                />
-              )}
-            </View>
-
-            <View className="flex-1 ml-2">
-              <Text className="text-slate-500 mb-1">End Time</Text>
-              <Pressable
-                onPress={() => setShowEndTimePicker(true)}
-                className="bg-slate-700 p-3 rounded-lg"
-              >
-                <Text className="text-white text-center">
-                  {endTime.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </Text>
-              </Pressable>
-              {showEndTimePicker && (
-                <DateTimePicker
-                  value={endTime}
-                  mode="time"
-                  display="default"
-                  onChange={(e, d) => {
-                    setShowEndTimePicker(false);
-                    if (d) setEndTime(d);
-                  }}
-                />
-              )}
-            </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerClassName="p-4 pb-20">
+          {/* Job Category */}
+          <View className="mb-6">
+            <Text className="text-slate-400 mb-2 font-bold">Job Category</Text>
+            <TextInput
+              className="bg-slate-800 text-white p-4 rounded-xl text-lg border border-slate-700"
+              value={jobCategory}
+              onChangeText={setJobCategory}
+              placeholder="e.g. Coding"
+              placeholderTextColor="#64748b"
+            />
           </View>
 
-          <View>
-            <Text className="text-slate-500 mb-1">
-              Total Break Duration (Calculated)
+          {/* Time Section */}
+          <View className="mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
+            <Text className="text-slate-400 mb-4 font-bold">
+              Time & Duration
             </Text>
-            <View className="bg-slate-700 p-3 rounded-lg">
-              <Text className="text-white text-center font-bold">
-                {formatDuration(calculateTotalBreakMinutes(breaks))}
+
+            <View className="flex-row justify-between mb-4">
+              <View className="flex-1 mr-2">
+                <Text className="text-slate-500 mb-1">Start Time</Text>
+                <Pressable
+                  onPress={() => setShowStartTimePicker(true)}
+                  className="bg-slate-700 p-3 rounded-lg"
+                >
+                  <Text className="text-white text-center">
+                    {startTime.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </Text>
+                </Pressable>
+                {showStartTimePicker && (
+                  <DateTimePicker
+                    value={startTime}
+                    mode="time"
+                    display="default"
+                    onChange={(e, d) => {
+                      setShowStartTimePicker(false);
+                      if (d) setStartTime(d);
+                    }}
+                  />
+                )}
+              </View>
+
+              <View className="flex-1 ml-2">
+                <Text className="text-slate-500 mb-1">End Time</Text>
+                <Pressable
+                  onPress={() => setShowEndTimePicker(true)}
+                  className="bg-slate-700 p-3 rounded-lg"
+                >
+                  <Text className="text-white text-center">
+                    {endTime.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </Text>
+                </Pressable>
+                {showEndTimePicker && (
+                  <DateTimePicker
+                    value={endTime}
+                    mode="time"
+                    display="default"
+                    onChange={(e, d) => {
+                      setShowEndTimePicker(false);
+                      if (d) setEndTime(d);
+                    }}
+                  />
+                )}
+              </View>
+            </View>
+
+            <View>
+              <Text className="text-slate-500 mb-1">
+                Total Break Duration (Calculated)
               </Text>
+              <View className="bg-slate-700 p-3 rounded-lg">
+                <Text className="text-white text-center font-bold">
+                  {formatDuration(calculateTotalBreakMinutes(breaks))}
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* Pre-Session Details */}
-        <View className="mb-6">
-          <Text className="text-white text-lg font-bold mb-4">Pre-Session</Text>
+          {/* Pre-Session Details */}
+          <View className="mb-6">
+            <Text className="text-white text-lg font-bold mb-4">
+              Pre-Session
+            </Text>
 
-          <Text className="text-slate-400 mb-2">Mood</Text>
-          <View className="flex-row flex-wrap gap-2 mb-4">
-            {MOOD_OPTIONS.map((item) => (
-              <Pressable
-                key={item.label}
-                onPress={() => setSubjectiveMood(item.label)}
-                className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
-                  subjectiveMood === item.label
-                    ? "bg-blue-600 border-blue-600"
-                    : "bg-slate-800 border-slate-700"
-                }`}
-              >
-                <View className="flex-row items-center gap-2">
-                  <Text className="text-2xl">{item.emoji}</Text>
-                  <Text className="text-white font-bold">{item.label}</Text>
-                </View>
-                <Text className="text-slate-400 text-xs text-center">
-                  {item.desc}
+            <Text className="text-slate-400 mb-2">Mood</Text>
+            <View className="flex-row flex-wrap gap-2 mb-4">
+              {MOOD_OPTIONS.map((item) => (
+                <Pressable
+                  key={item.label}
+                  onPress={() => setSubjectiveMood(item.label)}
+                  className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
+                    subjectiveMood === item.label
+                      ? "bg-blue-600 border-blue-600"
+                      : "bg-slate-800 border-slate-700"
+                  }`}
+                >
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-2xl">{item.emoji}</Text>
+                    <Text className="text-white font-bold">{item.label}</Text>
+                  </View>
+                  <Text className="text-slate-400 text-xs text-center">
+                    {item.desc}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Text className="text-slate-400 mb-2">Energy Level</Text>
+            <View className="flex-row justify-between bg-slate-800 p-2 rounded-xl border border-slate-700 mb-4">
+              {[1, 3, 5, 7, 9].map((level) => (
+                <Pressable
+                  key={level}
+                  onPress={() => setEnergyLevel(level.toString())}
+                  className={`p-3 rounded-lg ${
+                    energyLevel === level.toString()
+                      ? "bg-blue-600"
+                      : "bg-transparent"
+                  }`}
+                >
+                  <Text className="text-white font-bold">{level}</Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Text className="text-slate-400 mb-2">Context Tags</Text>
+            {TAG_CATEGORIES.map((category) => (
+              <View key={category.title} className="mb-4">
+                <Text className="text-slate-500 text-xs font-bold mb-2 uppercase">
+                  {category.title}
                 </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <Text className="text-slate-400 mb-2">Energy Level</Text>
-          <View className="flex-row justify-between bg-slate-800 p-2 rounded-xl border border-slate-700 mb-4">
-            {[1, 3, 5, 7, 9].map((level) => (
-              <Pressable
-                key={level}
-                onPress={() => setEnergyLevel(level.toString())}
-                className={`p-3 rounded-lg ${
-                  energyLevel === level.toString()
-                    ? "bg-blue-600"
-                    : "bg-transparent"
-                }`}
-              >
-                <Text className="text-white font-bold">{level}</Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <Text className="text-slate-400 mb-2">Context Tags</Text>
-          {TAG_CATEGORIES.map((category) => (
-            <View key={category.title} className="mb-4">
-              <Text className="text-slate-500 text-xs font-bold mb-2 uppercase">
-                {category.title}
-              </Text>
-              <View className="flex-row flex-wrap gap-2">
-                {category.tags.map((tag) => (
-                  <Pressable
-                    key={tag}
-                    onPress={() => toggleTag(tag)}
-                    className={`px-3 py-2 rounded-lg border ${
-                      contextTags.includes(tag)
-                        ? "bg-blue-600 border-blue-600"
-                        : "bg-slate-800 border-slate-700"
-                    }`}
-                  >
-                    <Text
-                      className={`text-sm ${
+                <View className="flex-row flex-wrap gap-2">
+                  {category.tags.map((tag) => (
+                    <Pressable
+                      key={tag}
+                      onPress={() => toggleTag(tag)}
+                      className={`px-3 py-2 rounded-lg border ${
                         contextTags.includes(tag)
-                          ? "text-white font-bold"
-                          : "text-slate-300"
+                          ? "bg-blue-600 border-blue-600"
+                          : "bg-slate-800 border-slate-700"
                       }`}
                     >
-                      {tag}
-                    </Text>
-                  </Pressable>
-                ))}
+                      <Text
+                        className={`text-sm ${
+                          contextTags.includes(tag)
+                            ? "text-white font-bold"
+                            : "text-slate-300"
+                        }`}
+                      >
+                        {tag}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
               </View>
-            </View>
-          ))}
-        </View>
-
-        {/* Breaks Section */}
-        <View className="mb-6">
-          <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-white text-lg font-bold">Breaks</Text>
-            <Pressable
-              onPress={addBreak}
-              className="bg-blue-600 px-3 py-1 rounded-lg"
-            >
-              <Text className="text-white font-bold text-sm">+ Add Break</Text>
-            </Pressable>
+            ))}
           </View>
 
-          {breaks.map((brk, idx) => (
-            <View
-              key={idx}
-              className="bg-slate-800 p-4 rounded-xl border border-slate-700 mb-4"
-            >
-              <View className="flex-row justify-between mb-2">
-                <Text className="text-slate-400 font-bold">
-                  Break #{idx + 1}
+          {/* Breaks Section */}
+          <View className="mb-6">
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-white text-lg font-bold">Breaks</Text>
+              <Pressable
+                onPress={addBreak}
+                className="bg-blue-600 px-3 py-1 rounded-lg"
+              >
+                <Text className="text-white font-bold text-sm">
+                  + Add Break
                 </Text>
-                <Pressable onPress={() => removeBreak(idx)}>
-                  <IconSymbol name="trash.fill" size={20} color="#ef4444" />
+              </Pressable>
+            </View>
+
+            {breaks.map((brk, idx) => (
+              <View
+                key={idx}
+                className="bg-slate-800 p-4 rounded-xl border border-slate-700 mb-4"
+              >
+                <View className="flex-row justify-between mb-2">
+                  <Text className="text-slate-400 font-bold">
+                    Break #{idx + 1}
+                  </Text>
+                  <Pressable onPress={() => removeBreak(idx)}>
+                    <IconSymbol name="trash.fill" size={20} color="#ef4444" />
+                  </Pressable>
+                </View>
+
+                <View className="flex-row gap-2 mb-2">
+                  <View className="flex-1">
+                    <Text className="text-slate-500 text-xs mb-1">Start</Text>
+                    <Pressable
+                      onPress={() =>
+                        setActiveBreakPicker({
+                          index: idx,
+                          field: "break_start",
+                        })
+                      }
+                      className="bg-slate-900 p-2 rounded-lg border border-slate-700"
+                    >
+                      <Text className="text-white">{brk.break_start}</Text>
+                    </Pressable>
+                    {activeBreakPicker?.index === idx &&
+                      activeBreakPicker?.field === "break_start" && (
+                        <DateTimePicker
+                          value={parseTimeStr(brk.break_start) || new Date()}
+                          mode="time"
+                          display="default"
+                          onChange={(e, d) => {
+                            setActiveBreakPicker(null);
+                            if (d) {
+                              updateBreak(
+                                idx,
+                                "break_start",
+                                d.toLocaleTimeString()
+                              );
+                            }
+                          }}
+                        />
+                      )}
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-slate-500 text-xs mb-1">End</Text>
+                    <Pressable
+                      onPress={() =>
+                        setActiveBreakPicker({ index: idx, field: "break_end" })
+                      }
+                      className="bg-slate-900 p-2 rounded-lg border border-slate-700"
+                    >
+                      <Text className="text-white">{brk.break_end}</Text>
+                    </Pressable>
+                    {activeBreakPicker?.index === idx &&
+                      activeBreakPicker?.field === "break_end" && (
+                        <DateTimePicker
+                          value={parseTimeStr(brk.break_end) || new Date()}
+                          mode="time"
+                          display="default"
+                          onChange={(e, d) => {
+                            setActiveBreakPicker(null);
+                            if (d) {
+                              updateBreak(
+                                idx,
+                                "break_end",
+                                d.toLocaleTimeString()
+                              );
+                            }
+                          }}
+                        />
+                      )}
+                  </View>
+                </View>
+
+                <View>
+                  <Text className="text-slate-500 text-xs mb-1">Reason</Text>
+                  <TextInput
+                    className="bg-slate-900 text-white p-2 rounded-lg border border-slate-700"
+                    value={brk.break_description}
+                    onChangeText={(text) =>
+                      updateBreak(idx, "break_description", text)
+                    }
+                    placeholder="Why did you take a break?"
+                    placeholderTextColor="#64748b"
+                  />
+                </View>
+              </View>
+            ))}
+          </View>
+
+          {/* Post-Session Details */}
+          <View className="mb-6">
+            <Text className="text-white text-lg font-bold mb-4">
+              Post-Session
+            </Text>
+
+            <Text className="text-slate-400 mb-2">Output Rating</Text>
+            <View className="flex-row gap-2 mb-4">
+              {["Low", "Medium", "High"].map((rating) => (
+                <Pressable
+                  key={rating}
+                  onPress={() => setOutputRating(rating)}
+                  className={`flex-1 p-3 rounded-lg items-center border ${
+                    outputRating === rating
+                      ? "bg-blue-600 border-blue-600"
+                      : "bg-slate-800 border-slate-700"
+                  }`}
+                >
+                  <Text className="text-white font-bold">{rating}</Text>
                 </Pressable>
-              </View>
-
-              <View className="flex-row gap-2 mb-2">
-                <View className="flex-1">
-                  <Text className="text-slate-500 text-xs mb-1">Start</Text>
-                  <Pressable
-                    onPress={() =>
-                      setActiveBreakPicker({ index: idx, field: "break_start" })
-                    }
-                    className="bg-slate-900 p-2 rounded-lg border border-slate-700"
-                  >
-                    <Text className="text-white">{brk.break_start}</Text>
-                  </Pressable>
-                  {activeBreakPicker?.index === idx &&
-                    activeBreakPicker?.field === "break_start" && (
-                      <DateTimePicker
-                        value={parseTimeStr(brk.break_start) || new Date()}
-                        mode="time"
-                        display="default"
-                        onChange={(e, d) => {
-                          setActiveBreakPicker(null);
-                          if (d) {
-                            updateBreak(
-                              idx,
-                              "break_start",
-                              d.toLocaleTimeString()
-                            );
-                          }
-                        }}
-                      />
-                    )}
-                </View>
-                <View className="flex-1">
-                  <Text className="text-slate-500 text-xs mb-1">End</Text>
-                  <Pressable
-                    onPress={() =>
-                      setActiveBreakPicker({ index: idx, field: "break_end" })
-                    }
-                    className="bg-slate-900 p-2 rounded-lg border border-slate-700"
-                  >
-                    <Text className="text-white">{brk.break_end}</Text>
-                  </Pressable>
-                  {activeBreakPicker?.index === idx &&
-                    activeBreakPicker?.field === "break_end" && (
-                      <DateTimePicker
-                        value={parseTimeStr(brk.break_end) || new Date()}
-                        mode="time"
-                        display="default"
-                        onChange={(e, d) => {
-                          setActiveBreakPicker(null);
-                          if (d) {
-                            updateBreak(
-                              idx,
-                              "break_end",
-                              d.toLocaleTimeString()
-                            );
-                          }
-                        }}
-                      />
-                    )}
-                </View>
-              </View>
-
-              <View>
-                <Text className="text-slate-500 text-xs mb-1">Reason</Text>
-                <TextInput
-                  className="bg-slate-900 text-white p-2 rounded-lg border border-slate-700"
-                  value={brk.break_description}
-                  onChangeText={(text) =>
-                    updateBreak(idx, "break_description", text)
-                  }
-                  placeholder="Why did you take a break?"
-                  placeholderTextColor="#64748b"
-                />
-              </View>
+              ))}
             </View>
-          ))}
-        </View>
 
-        {/* Post-Session Details */}
-        <View className="mb-6">
-          <Text className="text-white text-lg font-bold mb-4">
-            Post-Session
-          </Text>
+            <Text className="text-slate-400 mb-2">End Mood</Text>
+            <View className="flex-row flex-wrap gap-2 mb-4">
+              {MOOD_OPTIONS.map((item) => (
+                <Pressable
+                  key={item.label}
+                  onPress={() => setEndMood(item.label)}
+                  className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
+                    endMood === item.label
+                      ? "bg-blue-600 border-blue-600"
+                      : "bg-slate-800 border-slate-700"
+                  }`}
+                >
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-2xl">{item.emoji}</Text>
+                    <Text className="text-white font-bold">{item.label}</Text>
+                  </View>
+                  <Text className="text-slate-400 text-xs text-center">
+                    {item.desc}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
 
-          <Text className="text-slate-400 mb-2">Output Rating</Text>
-          <View className="flex-row gap-2 mb-4">
-            {["Low", "Medium", "High"].map((rating) => (
-              <Pressable
-                key={rating}
-                onPress={() => setOutputRating(rating)}
-                className={`flex-1 p-3 rounded-lg items-center border ${
-                  outputRating === rating
-                    ? "bg-blue-600 border-blue-600"
-                    : "bg-slate-800 border-slate-700"
-                }`}
-              >
-                <Text className="text-white font-bold">{rating}</Text>
-              </Pressable>
-            ))}
+            <Text className="text-slate-400 mb-2">Distraction Level</Text>
+            <View className="flex-row gap-2 mb-4">
+              {["None", "Low", "Medium", "High"].map((level) => (
+                <Pressable
+                  key={level}
+                  onPress={() => setDistractionLevel(level)}
+                  className={`flex-1 p-3 rounded-lg items-center border ${
+                    distractionLevel === level
+                      ? "bg-purple-600 border-purple-600"
+                      : "bg-slate-800 border-slate-700"
+                  }`}
+                >
+                  <Text className="text-white font-bold">{level}</Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Text className="text-slate-400 mb-2">Notes</Text>
+            <TextInput
+              className="bg-slate-800 text-white p-4 rounded-xl text-lg border border-slate-700 h-24"
+              placeholder="Any thoughts?"
+              placeholderTextColor="#64748b"
+              multiline
+              textAlignVertical="top"
+              value={userNotes}
+              onChangeText={setUserNotes}
+            />
           </View>
-
-          <Text className="text-slate-400 mb-2">End Mood</Text>
-          <View className="flex-row flex-wrap gap-2 mb-4">
-            {MOOD_OPTIONS.map((item) => (
-              <Pressable
-                key={item.label}
-                onPress={() => setEndMood(item.label)}
-                className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
-                  endMood === item.label
-                    ? "bg-blue-600 border-blue-600"
-                    : "bg-slate-800 border-slate-700"
-                }`}
-              >
-                <View className="flex-row items-center gap-2">
-                  <Text className="text-2xl">{item.emoji}</Text>
-                  <Text className="text-white font-bold">{item.label}</Text>
-                </View>
-                <Text className="text-slate-400 text-xs text-center">
-                  {item.desc}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <Text className="text-slate-400 mb-2">Distraction Level</Text>
-          <View className="flex-row gap-2 mb-4">
-            {["None", "Low", "Medium", "High"].map((level) => (
-              <Pressable
-                key={level}
-                onPress={() => setDistractionLevel(level)}
-                className={`flex-1 p-3 rounded-lg items-center border ${
-                  distractionLevel === level
-                    ? "bg-purple-600 border-purple-600"
-                    : "bg-slate-800 border-slate-700"
-                }`}
-              >
-                <Text className="text-white font-bold">{level}</Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <Text className="text-slate-400 mb-2">Notes</Text>
-          <TextInput
-            className="bg-slate-800 text-white p-4 rounded-xl text-lg border border-slate-700 h-24"
-            placeholder="Any thoughts?"
-            placeholderTextColor="#64748b"
-            multiline
-            textAlignVertical="top"
-            value={userNotes}
-            onChangeText={setUserNotes}
-          />
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

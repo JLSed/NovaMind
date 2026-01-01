@@ -8,6 +8,8 @@ import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -178,186 +180,191 @@ export default function ScheduleScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-slate-900">
-      <ScrollView contentContainerClassName="p-4">
-        <View className="flex-row justify-between items-center mb-8">
-          <Text className="text-white text-3xl font-bold">
-            Schedule Generator
-          </Text>
-          <View className="flex-row gap-2">
-            <Link href="/daily-log" asChild>
-              <Pressable className="bg-slate-800 p-2 rounded-full border border-slate-700 active:bg-slate-700">
-                <IconSymbol name="pencil" size={24} color="#94a3b8" />
-              </Pressable>
-            </Link>
-            <Link href="/wiki" asChild>
-              <Pressable className="bg-slate-800 p-2 rounded-full border border-slate-700 active:bg-slate-700">
-                <IconSymbol name="info.circle" size={24} color="#60a5fa" />
-              </Pressable>
-            </Link>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerClassName="p-4">
+          <View className="flex-row justify-between items-center mb-8">
+            <Text className="text-white text-3xl font-bold">
+              Schedule Generator
+            </Text>
+            <View className="flex-row gap-2">
+              <Link href="/daily-log" asChild>
+                <Pressable className="bg-slate-800 p-2 rounded-full border border-slate-700 active:bg-slate-700">
+                  <IconSymbol name="pencil" size={24} color="#94a3b8" />
+                </Pressable>
+              </Link>
+              <Link href="/wiki" asChild>
+                <Pressable className="bg-slate-800 p-2 rounded-full border border-slate-700 active:bg-slate-700">
+                  <IconSymbol name="info.circle" size={24} color="#60a5fa" />
+                </Pressable>
+              </Link>
+            </View>
           </View>
-        </View>
 
-        {/* Current Status Section */}
-        <View className="mb-8">
-          <Text className="text-slate-400 mb-2 text-lg">
-            How do you feel RIGHT NOW?
-          </Text>
-          <View className="flex-row flex-wrap gap-2 mb-4">
-            {MOOD_OPTIONS.map((item) => (
-              <Pressable
-                key={item.label}
-                onPress={() => setCurrentMood(item.label)}
-                className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
-                  currentMood === item.label
-                    ? "bg-blue-600 border-blue-600"
-                    : "bg-slate-800 border-slate-700"
-                }`}
-              >
-                <View className="flex-row items-center gap-2">
-                  <Text className="text-2xl">{item.emoji}</Text>
+          {/* Current Status Section */}
+          <View className="mb-8">
+            <Text className="text-slate-400 mb-2 text-lg">
+              How do you feel RIGHT NOW?
+            </Text>
+            <View className="flex-row flex-wrap gap-2 mb-4">
+              {MOOD_OPTIONS.map((item) => (
+                <Pressable
+                  key={item.label}
+                  onPress={() => setCurrentMood(item.label)}
+                  className={`w-[48%] p-3 rounded-xl border flex-col items-center justify-center gap-1 ${
+                    currentMood === item.label
+                      ? "bg-blue-600 border-blue-600"
+                      : "bg-slate-800 border-slate-700"
+                  }`}
+                >
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-2xl">{item.emoji}</Text>
+                    <Text className="text-white font-bold">{item.label}</Text>
+                  </View>
+                  <Text className="text-slate-400 text-xs text-center">
+                    {item.desc}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Text className="text-slate-400 mb-2 text-lg">
+              Current Physical State (Select all that apply)
+            </Text>
+            <View className="flex-row flex-wrap gap-3">
+              {PHYSICAL_STATE_OPTIONS.map((item) => (
+                <Pressable
+                  key={item.label}
+                  onPress={() => {
+                    if (currentPhysicalStates.includes(item.label)) {
+                      setCurrentPhysicalStates(
+                        currentPhysicalStates.filter((s) => s !== item.label)
+                      );
+                    } else {
+                      setCurrentPhysicalStates([
+                        ...currentPhysicalStates,
+                        item.label,
+                      ]);
+                    }
+                  }}
+                  className={`p-3 rounded-xl border flex-row items-center gap-2 ${
+                    currentPhysicalStates.includes(item.label)
+                      ? "bg-blue-600 border-blue-600"
+                      : "bg-slate-800 border-slate-700"
+                  }`}
+                >
+                  <Text className="text-xl">{item.emoji}</Text>
                   <Text className="text-white font-bold">{item.label}</Text>
-                </View>
-                <Text className="text-slate-400 text-xs text-center">
-                  {item.desc}
-                </Text>
-              </Pressable>
-            ))}
+                </Pressable>
+              ))}
+            </View>
+
+            <Text className="text-slate-400 mb-2 text-lg mt-4">
+              Tasks you want to do today (Optional)
+            </Text>
+            <TextInput
+              className="bg-slate-800 text-white p-4 rounded-xl border border-slate-700"
+              placeholder="e.g., Finish report, Gym, Read book..."
+              placeholderTextColor="#64748b"
+              value={userTasks}
+              onChangeText={setUserTasks}
+              multiline
+            />
           </View>
 
-          <Text className="text-slate-400 mb-2 text-lg">
-            Current Physical State (Select all that apply)
-          </Text>
-          <View className="flex-row flex-wrap gap-3">
-            {PHYSICAL_STATE_OPTIONS.map((item) => (
-              <Pressable
-                key={item.label}
-                onPress={() => {
-                  if (currentPhysicalStates.includes(item.label)) {
-                    setCurrentPhysicalStates(
-                      currentPhysicalStates.filter((s) => s !== item.label)
-                    );
-                  } else {
-                    setCurrentPhysicalStates([
-                      ...currentPhysicalStates,
-                      item.label,
-                    ]);
-                  }
-                }}
-                className={`p-3 rounded-xl border flex-row items-center gap-2 ${
-                  currentPhysicalStates.includes(item.label)
-                    ? "bg-blue-600 border-blue-600"
-                    : "bg-slate-800 border-slate-700"
-                }`}
-              >
-                <Text className="text-xl">{item.emoji}</Text>
-                <Text className="text-white font-bold">{item.label}</Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <Text className="text-slate-400 mb-2 text-lg mt-4">
-            Tasks you want to do today (Optional)
-          </Text>
-          <TextInput
-            className="bg-slate-800 text-white p-4 rounded-xl border border-slate-700"
-            placeholder="e.g., Finish report, Gym, Read book..."
-            placeholderTextColor="#64748b"
-            value={userTasks}
-            onChangeText={setUserTasks}
-            multiline
-          />
-        </View>
-
-        {/* Submit Button */}
-        <Pressable
-          onPress={handleGenerateSchedule}
-          disabled={loading}
-          className={`p-4 rounded-full items-center ${
-            loading ? "bg-blue-800" : "bg-blue-600 active:bg-blue-700"
-          }`}
-        >
-          {loading ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text className="text-white font-bold text-lg">
-              Generate Schedule
-            </Text>
-          )}
-        </Pressable>
-
-        {/* AI Response Display */}
-        {scheduleData ? (
-          <View className="mt-8">
-            <Text className="text-blue-400 font-bold text-xl mb-4">
-              Your AI Plan
-            </Text>
-
-            {/* Recommended Flow - Timeline */}
-            <View className="mb-3">
-              <Text className="text-blue-300 font-bold text-lg mb-4">
-                🕒 Recommended Flow
+          {/* Submit Button */}
+          <Pressable
+            onPress={handleGenerateSchedule}
+            disabled={loading}
+            className={`p-4 rounded-full items-center ${
+              loading ? "bg-blue-800" : "bg-blue-600 active:bg-blue-700"
+            }`}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text className="text-white font-bold text-lg">
+                Generate Schedule
               </Text>
-              <View className="">
-                {scheduleData.recommendedFlow?.map(
-                  (item: any, index: number) => (
-                    <View key={index} className="flex-row mb-4 items-center">
-                      {/* Time Column */}
-                      <View className="border-r-2 h-full w-24 border-slate-600 pr-3 pl-2 items-end pt-1">
-                        <Text className="text-slate-400 font-bold text-sm">
-                          {item.timeRange.split("-")[0].trim()}
-                        </Text>
-                        <Text className="text-slate-500 text-xs">
-                          {item.timeRange.split("-")[1]?.trim()}
-                        </Text>
-                      </View>
+            )}
+          </Pressable>
 
-                      {/* Content Column */}
-                      <View className="flex-1 pl-3 pb-2">
-                        <Text className="text-white font-bold text-lg">
-                          {item.taskType}
-                        </Text>
-                        <Text className="text-slate-400 text-base text-justify mt-1">
-                          {item.reason}
-                        </Text>
+          {/* AI Response Display */}
+          {scheduleData ? (
+            <View className="mt-8">
+              <Text className="text-blue-400 font-bold text-xl mb-4">
+                Your AI Plan
+              </Text>
+
+              {/* Recommended Flow - Timeline */}
+              <View className="mb-3">
+                <Text className="text-blue-300 font-bold text-lg mb-4">
+                  🕒 Recommended Flow
+                </Text>
+                <View className="">
+                  {scheduleData.recommendedFlow?.map(
+                    (item: any, index: number) => (
+                      <View key={index} className="flex-row mb-4 items-center">
+                        {/* Time Column */}
+                        <View className="border-r-2 h-full w-24 border-slate-600 pr-3 pl-2 items-end pt-1">
+                          <Text className="text-slate-400 font-bold text-sm">
+                            {item.timeRange.split("-")[0].trim()}
+                          </Text>
+                          <Text className="text-slate-500 text-xs">
+                            {item.timeRange.split("-")[1]?.trim()}
+                          </Text>
+                        </View>
+
+                        {/* Content Column */}
+                        <View className="flex-1 pl-3 pb-2">
+                          <Text className="text-white font-bold text-lg">
+                            {item.taskType}
+                          </Text>
+                          <Text className="text-slate-400 text-base text-justify mt-1">
+                            {item.reason}
+                          </Text>
+                        </View>
                       </View>
-                    </View>
-                  )
-                )}
+                    )
+                  )}
+                </View>
+              </View>
+
+              {/* Daily Prediction */}
+              <View className="mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
+                <Text className="text-blue-400 font-bold text-lg mb-2">
+                  📊 Daily Prediction
+                </Text>
+                <Markdown
+                  style={{
+                    body: { color: "#e2e8f0", fontSize: 16 },
+                    strong: { color: "#60a5fa", fontWeight: "bold" },
+                  }}
+                >
+                  {scheduleData.dailyPrediction || ""}
+                </Markdown>
+              </View>
+
+              {/* Insight */}
+              <View className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                <Text className="text-yellow-400 font-bold text-lg mb-2">
+                  💡 Insight
+                </Text>
+                <Markdown
+                  style={{
+                    body: { color: "#e2e8f0", fontSize: 16 },
+                    strong: { color: "#60a5fa", fontWeight: "bold" },
+                  }}
+                >
+                  {scheduleData.insight || ""}
+                </Markdown>
               </View>
             </View>
-
-            {/* Daily Prediction */}
-            <View className="mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
-              <Text className="text-blue-400 font-bold text-lg mb-2">
-                📊 Daily Prediction
-              </Text>
-              <Markdown
-                style={{
-                  body: { color: "#e2e8f0", fontSize: 16 },
-                  strong: { color: "#60a5fa", fontWeight: "bold" },
-                }}
-              >
-                {scheduleData.dailyPrediction || ""}
-              </Markdown>
-            </View>
-
-            {/* Insight */}
-            <View className="bg-slate-800 p-4 rounded-xl border border-slate-700">
-              <Text className="text-yellow-400 font-bold text-lg mb-2">
-                💡 Insight
-              </Text>
-              <Markdown
-                style={{
-                  body: { color: "#e2e8f0", fontSize: 16 },
-                  strong: { color: "#60a5fa", fontWeight: "bold" },
-                }}
-              >
-                {scheduleData.insight || ""}
-              </Markdown>
-            </View>
-          </View>
-        ) : null}
-      </ScrollView>
+          ) : null}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
