@@ -65,7 +65,7 @@ export const TAG_CATEGORIES = [
   {
     title: "Fuel (Intake & Biology)",
     tags: [
-      "Just Woked Up",
+      "Just Woke Up",
       "Caffeinated",
       "Fasted",
       "Heavy Meal",

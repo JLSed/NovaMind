@@ -178,7 +178,7 @@ export default function ScheduleScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-slate-900">
-      <ScrollView contentContainerClassName="p-6">
+      <ScrollView contentContainerClassName="p-4">
         <View className="flex-row justify-between items-center mb-8">
           <Text className="text-white text-3xl font-bold">
             Schedule Generator
@@ -300,9 +300,9 @@ export default function ScheduleScreen() {
               <View className="">
                 {scheduleData.recommendedFlow?.map(
                   (item: any, index: number) => (
-                    <View key={index} className="flex-row mb-4">
+                    <View key={index} className="flex-row mb-4 items-center">
                       {/* Time Column */}
-                      <View className="border-r-2 border-slate-600 pr-3 pl-2 items-end pt-1">
+                      <View className="border-r-2 h-full w-24 border-slate-600 pr-3 pl-2 items-end pt-1">
                         <Text className="text-slate-400 font-bold text-sm">
                           {item.timeRange.split("-")[0].trim()}
                         </Text>
@@ -316,7 +316,7 @@ export default function ScheduleScreen() {
                         <Text className="text-white font-bold text-lg">
                           {item.taskType}
                         </Text>
-                        <Text className="text-slate-400 text-base mt-1">
+                        <Text className="text-slate-400 text-base text-justify mt-1">
                           {item.reason}
                         </Text>
                       </View>
