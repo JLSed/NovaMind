@@ -455,36 +455,6 @@ export default function SessionScreen() {
     return `${year}-${month}-${day}`;
   };
 
-  const calculateTotalBreakMinutes = (breaksList: any[]) => {
-    if (!breaksList || breaksList.length === 0) return 0;
-
-    let totalMinutes = 0;
-    const today = new Date().toISOString().split("T")[0]; // Use today for parsing context
-
-    breaksList.forEach((brk) => {
-      if (brk.break_start && brk.break_end) {
-        // Simple parsing assuming standard time format or Date string
-        // Since we save as toLocaleTimeString(), we need to be careful.
-        // Best effort: try to parse.
-        const start = new Date(`${today} ${brk.break_start}`);
-        const end = new Date(`${today} ${brk.break_end}`);
-
-        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-          let diffMs = end.getTime() - start.getTime();
-          if (diffMs < 0) {
-            // Handle crossing midnight or parsing errors where end < start
-            // For now, ignore negative durations or assume next day?
-            // Let's assume same day for simplicity in this context
-            diffMs = 0;
-          }
-          totalMinutes += diffMs / 60000;
-        }
-      }
-    });
-
-    return Math.round(totalMinutes);
-  };
-
   const handleSaveSession = async () => {
     console.log("Attempting to save session...");
     setLoading(true);
@@ -527,8 +497,8 @@ export default function SessionScreen() {
       if (!logData.break_sessions) logData.break_sessions = [];
 
       if (sessionType === "work") {
-        // Calculate break duration from the breaks array
-        const breakDurationMinutes = calculateTotalBreakMinutes(breaks);
+        // Calculate break duration from the accumulated break time
+        const breakDurationMinutes = Math.round(accumulatedBreakTime / 60000);
         const netFocusMinutes = totalDurationMinutes - breakDurationMinutes;
 
         const newSession = {

@@ -2,7 +2,7 @@
   "expo": {
     "name": "NovaMind",
     "slug": "NovaMind",
-    "version": "p-a1.4.2",
+    "version": "p-a1.4.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "novamind",
