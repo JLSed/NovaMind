@@ -56,6 +56,79 @@ Return your response in this JSON format (do not wrap in markdown code blocks):
 }
 `;
 
+// Helper function to minimize token usage by removing "noise"
+function cleanDataForAI(data: any): any {
+  if (Array.isArray(data)) {
+    return data.map(cleanDataForAI).filter((item) => {
+      // Filter out empty objects/arrays resulting from cleaning
+      if (
+        typeof item === "object" &&
+        item !== null &&
+        Object.keys(item).length === 0
+      )
+        return false;
+      if (item === null || item === undefined) return false;
+      return true;
+    });
+  } else if (typeof data === "object" && data !== null) {
+    const cleaned: any = {};
+    for (const key in data) {
+      // 1. Remove IDs (session_id, user_id, id, etc.)
+      if (key === "id" || key.endsWith("_id")) {
+        continue;
+      }
+
+      const value = data[key];
+
+      // 2. Remove Empty Fields
+      if (
+        value === null ||
+        value === undefined ||
+        value === "" ||
+        (Array.isArray(value) && value.length === 0)
+      ) {
+        continue;
+      }
+
+      // 3. Recursive Cleanup
+      let cleanedValue = cleanDataForAI(value);
+
+      // If object became empty after cleanup, discard it
+      if (
+        typeof cleanedValue === "object" &&
+        cleanedValue !== null &&
+        Object.keys(cleanedValue).length === 0
+      ) {
+        continue;
+      }
+
+      // 4. Redundant Dates (Optimization)
+      // Convert "2025-12-28T06:39:08.000Z" -> "06:39:08" for specific time fields
+      const timeKeys = [
+        "start_time",
+        "end_time",
+        "sleep_bedtime",
+        "sleep_waketime",
+        "break_start",
+        "break_end",
+        "timestamp", // Generic common timestamp field
+      ];
+
+      if (timeKeys.includes(key) && typeof cleanedValue === "string") {
+        // Extract HH:mm:ss if it matches ISO format
+        const timeMatch = cleanedValue.match(/T(\d{2}:\d{2}:\d{2})/);
+        if (timeMatch) {
+          cleanedValue = timeMatch[1];
+        }
+      }
+
+      cleaned[key] = cleanedValue;
+    }
+    return cleaned;
+  }
+  return data;
+}
+
 export async function generateSchedule(
   historyLogs: any[],
   dailyBioMetrics: any,
@@ -68,6 +141,17 @@ export async function generateSchedule(
       systemInstruction: SYSTEM_PROMPT,
     });
 
+    // Clean data to save tokens
+    const optimizedHistory = cleanDataForAI(historyLogs);
+    const optimizedBio = cleanDataForAI(dailyBioMetrics);
+    const optimizedStatus = cleanDataForAI(currentStatus);
+
+    // DEBUG: Show data cleaning results
+    console.log("⬇️ ----- JSON CLEANING DEBUG ----- ⬇️");
+    console.log("Old Size (Chars):", JSON.stringify(historyLogs).length);
+    console.log("New Size (Chars):", JSON.stringify(optimizedHistory).length);
+    console.log("⬆️ ----------------------------- ⬆️");
+
     const currentTime = new Date().toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
@@ -77,16 +161,16 @@ export async function generateSchedule(
       CURRENT_TIME: ${currentTime}
 
       DAILY_BIO_METRICS (Baseline): 
-      ${JSON.stringify(dailyBioMetrics)}
+      ${JSON.stringify(optimizedBio)}
 
       CURRENT_STATUS (Right Now):
-      ${JSON.stringify(currentStatus)}
+      ${JSON.stringify(optimizedStatus)}
 
       USER_TASKS (Tasks I want to do):
       ${userTasks || "None specified"}
 
       HISTORY_LOGS: 
-      ${JSON.stringify(historyLogs)}
+      ${JSON.stringify(optimizedHistory)}
       
       Please generate my schedule for today starting from ${currentTime}.
       If USER_TASKS are provided, incorporate them into the schedule where they fit best based on my energy levels.

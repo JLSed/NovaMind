@@ -1,0 +1,62 @@
+{
+  "daily_bio_metrics": {
+    "sleep_bedtime": "",        // ISO Timestamp
+    "sleep_waketime": "",       // ISO Timestamp
+    "sleep_duration_hours": 0,
+    "waking_condition": "",     // e.g., "Tired"
+    "physical_state": []        // e.g., ["Dehydrated"]
+  },
+  "sessions": [
+    {
+      "type": "work",
+      "session_id": "",
+      "job_category": "",
+      "pre_session": {
+        "start_time": "",
+        "energy_level": 0,      // Scale 1-10
+        "subjective_mood": "",
+        "context_tags": []
+      },
+      "post_session": {
+        "end_time": "",
+        "end_mood": "",
+        "output_rating": "",    // High/Medium/Low
+        "distraction_level": "",
+        "net_focus_minutes": 0,
+        "break_duration_minutes": 0,
+        "total_duration_minutes": 0,
+        "user_notes": ""
+      },
+      "breaks": [
+        {
+          "break_start": "",
+          "break_end": "",
+          "break_description": ""
+        }
+      ]
+    }
+  ],
+  "break_sessions": [
+    {
+      "type": "break",
+      "session_id": "",
+      "intent": "",             // "Recovery" or "Procrastination"
+      "trigger": "",            // e.g., "Fatigue"
+      "activities": [],         // e.g., ["Gaming"]
+      "pre_session": {
+        "start_time": "",
+        "energy_level": 0,
+        "subjective_mood": "",
+        "planned_duration": 0,
+        "context_tags": []
+      },
+      "post_session": {
+        "end_time": "",
+        "recovery_rating": "",  // High/Medium/Low
+        "guilt_rating": "",     // None/High
+        "total_duration_minutes": 0,
+        "user_notes": ""
+      }
+    }
+  ]
+}
