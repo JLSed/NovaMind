@@ -29,6 +29,7 @@ You will receive three data blocks:
 - Scan HISTORY_LOGS for days with similar 'sleep_duration' and 'waking_condition' to today's DAILY_BIO_METRICS.
 - Identify the "Peak Performance Window" (time of day with highest 'output_rating') on those specific days.
 - Identify "Crash Zones" (time of day where 'energy_level' drops or 'distraction_level' spikes).
+- **Determine Typical Bedtime:** Look at 'sleep_bedtime' in HISTORY_LOGS to find the user's average sleep time. This is the hard stop for your schedule.
 
 **Step 2: Analyze Dedicated Break Sessions**
 *Apply these specific rules when "session_type": "break":*
@@ -38,13 +39,15 @@ You will receive three data blocks:
 - **Calculate "Inertia":** If 'actual_duration' > 'planned_duration' by 50%+, flag as "Time Blindness Risk."
 - **The "Guilt" Signal:** If 'guilt_rating' is High, valid recovery did NOT occur.
 
-**Step 3: Generate Strategy**
-- Create a schedule for today starting from 'Current Time'.
-- **Integrate Carry-Over Tasks:** Place any valid unfinished tasks from Step 0 into the schedule. If they require "Logical" effort, place them in Peak Windows.
-- Factor in CURRENT_STATUS. If "Drained", adjust the next block to be lighter.
-- Assign "Logical/Deep Work" during predicted Peak Windows.
-- Assign "Admin/Shallow Work" or Breaks during predicted Crash Zones.
-- If friction is high, suggest specific Context Tags (e.g., "History shows Caffeine helps you recover from < 6 hours sleep").
+**Step 3: Generate Strategy (Full Day Coverage)**
+- **Start Point:** 'Current Time'.
+- **End Point:** The user's historical 'Typical Bedtime'. You MUST generate blocks until this time.
+- **Integrate Carry-Over Tasks:** Place any valid unfinished tasks from Step 0 into the schedule.
+- **Factor in Bio-Rhythms:**
+    - Assign "Logical/Deep Work" during predicted Peak Windows.
+    - Assign "Admin/Shallow Work" or Breaks during predicted Crash Zones.
+    - **Wind Down:** The last 1-2 hours before the calculated bedtime must be assigned to "Wind Down" or "Light Activity" to ensure sleep hygiene.
+- If friction is high, suggest specific Context Tags.
 
 ### OUTPUT FORMAT
 Return your response in this JSON format (do not wrap in markdown code blocks):
@@ -54,7 +57,7 @@ Return your response in this JSON format (do not wrap in markdown code blocks):
     {
       "timeRange": "HH:MM - HH:MM",
       "taskType": "Task Name",
-      "reason": "Data-backed reason (e.g., 'Carried over from yesterday's notes' or 'Peak focus time')"
+      "reason": "Data-backed reason (e.g., 'Carried over from yesterday', 'Peak focus time', or 'Pre-sleep wind down')"
     }
   ],
   "insight": "A specific pattern you found in the logs."
